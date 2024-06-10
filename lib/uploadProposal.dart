@@ -65,22 +65,28 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
     // final appState = Provider.of<AppState>(context, listen: false);
     // var token = prefs.getString('token') ?? '';
     Map<String, String> headers = {
-      // 'Content-Type': 'application/json; charset=UTF-8',
-      // "Accept": "application/json",
-      'Content-Type': 'multipart/form-data',
+      // // 'Content-Type': 'application/json; charset=UTF-8',
+      // // "Accept": "application/json",
+      // 'Content-Type': 'multipart/form-data',
       "Authorization":
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMSIsImVtYWlsIjoiYXJ5YUBzYmlnZW5lcmFsLmluIiwiaWF0IjoxNzE3NDgyMDQ0fQ.GF5_JFoyyl8q-tM5uHF5aCRl3G21TxIsOQxKSVmbcyY'
     };
+
     final formData = FormData.fromMap({
       'proposal_id': "5926717",
       'doc_type': 'proposal',
-      'files': [
-        for (var file in documents['proposalDocuments']!)
-          {
-            await MultipartFile.fromFile(file.path,
-                filename: file.path.split('/').last),
-          }
-      ]
+      // 'files': [
+      //   for (var file in documents['proposalDocuments']!)
+      //     {
+      //   await MultipartFile.fromFile(documents['proposalDocuments']![0].path,
+      //       filename: documents['proposalDocuments']![0].path.split('/').last),
+      //   }
+      // ]
+      'files': documents['proposalDocuments']!.map((e) async {
+        return await MultipartFile.fromFile(
+            documents['proposalDocuments']![0].path,
+            filename: documents['proposalDocuments']![0].path.split('/').last);
+      }).toList()
     });
 
     print(formData.fields);
