@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:secure_app/InwardDetails.dart';
 import 'package:secure_app/inwardForm%201.dart';
+import 'package:secure_app/inwardScreen.dart';
+import 'package:secure_app/kycIndividual.dart';
 // import 'package:secure_app/inwardForm%201.dart';
 // import 'package:secure_app/kyc.dart';
 import 'package:secure_app/layout.dart';
@@ -27,25 +30,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     Timer(
-        const Duration(seconds: 3),
-        // () => _prefs.then((SharedPreferences prefs) {
-        //   employeeNo = prefs.getString('employeeNo') ?? '';
+      const Duration(seconds: 3),
+      () => _prefs.then((SharedPreferences prefs) {
+        employeeNo = prefs.getString('employeeNo') ?? '';
 
-        //   if (employeeNo == '') {
-        //     Navigator.pushReplacement(context,
-        //         MaterialPageRoute(builder: (context) => const LayoutScreen()));
-        //   } else {
-        //     Navigator.pushReplacement(context,
-        //         MaterialPageRoute(builder: (context) => const LoginScreen()));
-        //   }
-        // }),
-        () => Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => ProposalDocuments(
-                      inwardData: null,
-                      inwardType: null,
-                    ))));
+        if (employeeNo == '') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const LayoutScreen()));
+        } else {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()));
+        }
+      }),
+    );
+    // () => Navigator.pushReplacement(
+    //     context,
+    //     MaterialPageRoute(
+    //         builder: (context) => const InwardDetailsScreen())));
 
     return Scaffold(
         body: Container(

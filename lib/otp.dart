@@ -105,6 +105,22 @@ class _OtpBoxState extends State<OtpBox> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(
+                        left: 15.0, right: 15.0, bottom: 15),
+                    child: Text(
+                      'Please enter the 4-digit OTP that was sent to your Registered phone number (${'XXX-XXX-' + appState.mobileNumber.substring(6)}) and Email ID (${appState.email}).',
+                      maxLines: 4,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
                         left: 15.0, right: 15.0, bottom: 20),
                     child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,

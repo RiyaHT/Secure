@@ -87,7 +87,7 @@ class LoginScreenState extends State<LoginScreen> {
           'mpin': _controller.text
         };
         final response = await dio.post(
-            'https://ansappsuat.sbigen.in/SecureApp/user/check-mpin',
+            'https://uatcld.sbigeneral.in/SecureApp/user/check-mpin',
             data: postData,
             options: Options(headers: headers));
         if (response.statusCode == 200) {

@@ -78,6 +78,7 @@ class _RegisterBoxState extends State<RegisterBox> {
                         cWidget: 1,
                       )));
           appState.updateVariables(
+            email: data2['email'],
             mobileNumber: data2['mobileNumber'],
             otp: data2['otp'],
             employeeNo: widget.controller.text,

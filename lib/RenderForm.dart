@@ -303,43 +303,48 @@ class _InsuranceFormState extends State<InsuranceForm> {
                 ],
               );
             } else if (field["Type"] == "Date") {
-              return TextFormField(
-                onChanged: (value) {
-                  setState(() {
-                    newValue[field["Field Name"]] = value;
-                    widget.getDetails(endorsementDetails());
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: field["Field Name"],
-                  enabledBorder: OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: Colors.black12, width: 2),
-                      borderRadius: BorderRadius.circular(10)),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                        color: Color.fromRGBO(13, 154, 189, 1), width: 2),
-                    borderRadius: BorderRadius.circular(10),
+              return Column(
+                children: [
+                  TextFormField(
+                    onChanged: (value) {
+                      setState(() {
+                        newValue[field["Field Name"]] = value;
+                        widget.getDetails(endorsementDetails());
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: field["Field Name"],
+                      enabledBorder: OutlineInputBorder(
+                          borderSide:
+                              const BorderSide(color: Colors.black12, width: 2),
+                          borderRadius: BorderRadius.circular(10)),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: const BorderSide(
+                            color: Color.fromRGBO(13, 154, 189, 1), width: 2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      prefixIconColor: MaterialStateColor.resolveWith(
+                          (Set<MaterialState> states) {
+                        if (states.contains(MaterialState.focused)) {
+                          return const Color.fromRGBO(13, 154, 189, 1);
+                        }
+                        return Colors.grey;
+                      }),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onTap: () async {
+                      FocusScope.of(context).requestFocus(FocusNode());
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                      );
+                    },
                   ),
-                  prefixIconColor: MaterialStateColor.resolveWith(
-                      (Set<MaterialState> states) {
-                    if (states.contains(MaterialState.focused)) {
-                      return const Color.fromRGBO(13, 154, 189, 1);
-                    }
-                    return Colors.grey;
-                  }),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                ),
-                onTap: () async {
-                  FocusScope.of(context).requestFocus(FocusNode());
-                  DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime(2101),
-                  );
-                },
+                  CommonFunction.heightGap(),
+                ],
               );
             }
             return Container();

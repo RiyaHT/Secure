@@ -9,6 +9,7 @@ import 'package:secure_app/DropdownWidget.dart';
 import 'package:secure_app/RenderForm.dart';
 import 'package:secure_app/commonFunction.dart';
 import 'package:secure_app/customInputContainer%201.dart';
+import 'package:secure_app/kycIndividual.dart';
 
 // import 'package:secure_app/kyc.dart';
 // import 'package:secure_app/kycIndividual.dart';
@@ -46,10 +47,10 @@ class _MyFormState extends State<MyForm> {
     '12345',
     '34567',
   ];
-  var dropdownValue = "";
+  // var dropdownValue = "";
   TextEditingController customerNameController = TextEditingController();
   TextEditingController previousPolicyController = TextEditingController();
-  TextEditingController panNumberController = TextEditingController();
+
   TextEditingController premiumAmountController = TextEditingController();
   TextEditingController instrumentNumberController = TextEditingController();
   TextEditingController instrumentAmountController = TextEditingController();
@@ -58,11 +59,11 @@ class _MyFormState extends State<MyForm> {
   TextEditingController policyNumberController = TextEditingController();
   TextEditingController quoteNumberController = TextEditingController();
   FocusNode focusNode1 = FocusNode();
-  String selectedCode = '';
+  String? selectedCode;
   TextEditingController agreementCodeController = TextEditingController();
 
-  String _inwardType = '';
-  String _modeOfSubmission1 = '';
+  String? _inwardType;
+  String _modeOfSubmission1 = 'Digital';
   bool isValid = false;
 
   String instrumentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
@@ -70,48 +71,51 @@ class _MyFormState extends State<MyForm> {
   String _coInsurance = 'No';
   String _PPHC = 'No';
   String customerType = 'Individual';
-  String leadType = 'Follower';
-  String selectedProduct = '';
-  String selectedProposal = '';
-  String selectedSPCode = '';
-  String selectedBranch = '';
-  String selectedSBIGBranch = '';
-  String selectedInstrumentType = '';
+  String? leadType;
+  String? selectedProduct;
+  String? selectedProposal;
+  String? selectedSPCode;
+  String? selectedBranch;
+  String? selectedSBIGBranch;
+  String? selectedInstrumentType;
   Map? endorsementData;
 
   void resetVariables() {
-    var dropdownValue = "";
-    customerNameController = TextEditingController();
-    previousPolicyController = TextEditingController();
-    panNumberController = TextEditingController();
-    premiumAmountController = TextEditingController();
-    instrumentNumberController = TextEditingController();
-    instrumentAmountController = TextEditingController();
-    salesEmailController = TextEditingController();
-    salesMobileController = TextEditingController();
-    policyNumberController = TextEditingController();
-    quoteNumberController = TextEditingController();
-    selectedCode = '';
-    agreementCodeController = TextEditingController();
-    _inwardType = '';
-    _modeOfSubmission1 = '';
-    instrumentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    proposedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    _coInsurance = 'No';
-    _PPHC = 'No';
-    customerType = 'Individual';
-    leadType = 'Follower';
-    selectedProduct = '';
-    selectedProposal = '';
-    selectedSPCode = '';
-    selectedBranch = '';
-    selectedSBIGBranch = '';
-    selectedInstrumentType = '';
+    // var dropdownValue = "";
+
+    setState(() {
+      customerNameController = TextEditingController();
+      previousPolicyController = TextEditingController();
+      premiumAmountController = TextEditingController();
+      instrumentNumberController = TextEditingController();
+      instrumentAmountController = TextEditingController();
+      salesEmailController = TextEditingController();
+      salesMobileController = TextEditingController();
+      policyNumberController = TextEditingController();
+      quoteNumberController = TextEditingController();
+      selectedCode = null;
+      agreementCodeController = TextEditingController();
+      _modeOfSubmission1 = 'Digital';
+      instrumentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      proposedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      _coInsurance = 'No';
+      _PPHC = 'No';
+      customerType = 'Individual';
+      leadType = '';
+      selectedProduct = null;
+      selectedProposal = null;
+      selectedSPCode = null;
+      selectedBranch = null;
+      selectedSBIGBranch = null;
+      selectedInstrumentType = null;
+    });
   }
 
   void _submitForm() {
-    endorsementData = {
+    Map endorsementData2 = {
       "proposalDetails": {
+        "is_bulk": 0,
+        "final_submitted": 0,
         "inward_type": _inwardType,
         "submission_mode": _modeOfSubmission1,
         "agreement_code": selectedCode,
@@ -150,7 +154,9 @@ class _MyFormState extends State<MyForm> {
       },
     };
 
-    Map<String, dynamic> inwardData = {
+    Map inwardData = {
+      "is_bulk": 0,
+      "final_submitted": 0,
       "inward_type": _inwardType,
       "inward_proposal_type": selectedProposal,
       "submission_mode": _modeOfSubmission1,
@@ -175,6 +181,8 @@ class _MyFormState extends State<MyForm> {
         },
       ]
     };
+    print(inwardData);
+    print(endorsementData2);
     if (_formKey.currentState!.validate()
 
         // _inwardType == null ||
@@ -191,45 +199,23 @@ class _MyFormState extends State<MyForm> {
         // selectedInstrumentType == null ||
         // instrumentNumberController.text.isEmpty ||
         // instrumentAmountController.text.isEmpty
+        // ) {
+        // if (selectedCode == '') {
+        //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        //       content: const Text("Please select Agreement Code!"),
+        //       action: SnackBarAction(
+        //         label: ' Cancel',
+        //         onPressed: () {},
+        //       )));
         ) {
-      if (selectedCode == '') {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: const Text("Please select Agreement Code!"),
-            action: SnackBarAction(
-              label: ' Cancel',
-              onPressed: () {},
-            )));
-      } else {
-        if (_inwardType == 'Proposal') {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ProposalDocuments(
-                      inwardData: inwardData, inwardType: _inwardType)));
-        } else if (_inwardType == 'Endorsement') {
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => ProposalDocuments(
-                        inwardData: endorsementData,
-                        inwardType: _inwardType,
-                      )));
-        }
-      }
-
-      // showDialog(
-      //   context: context,
-      //   builder: (context) => AlertDialog(
-      //     title: const Text('Error'),
-      //     content: const Text('Please fill out all fields'),
-      //     actions: [
-      //       TextButton(
-      //         onPressed: () => Navigator.pop(context),
-      //         child: const Text('OK'),
-      //       ),
-      //     ],
-      //   ),
-      // );
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => KYCIndividual(
+                  inwardData: _inwardType == 'Endorsement'
+                      ? endorsementData2
+                      : inwardData,
+                  inwardType: _inwardType)));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text("Please fill all the mandatory fields!"),
@@ -237,21 +223,56 @@ class _MyFormState extends State<MyForm> {
             label: ' Cancel',
             onPressed: () {},
           )));
-      // Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //         builder: (context) => ProposalDocuments(
-      //               inwardData: inwardData,
-      //             )));
-      // if (customerType == 'Individual') {
-      //   Navigator.push(context,
-      //       MaterialPageRoute(builder: (context) => const KYCIndividual()));
-      // } else if (customerType == 'Other Individual') {
-      //   Navigator.push(
-      //       context, MaterialPageRoute(builder: (context) => const KYCForm()));
-      // }
     }
   }
+  // } else {
+
+  // if (_inwardType == 'Endorsement') {
+  //   Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //           builder: (context) => KYCIndividual(
+  //               inwardData: endorsementData, inwardType: _inwardType)));
+  // } else {
+  //   Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //           builder: (context) => KYCIndividual(
+  //                 inwardData: inwardData,
+  //                 inwardType: _inwardType,
+  //               )));
+  //   // }
+  // }
+
+  // showDialog(
+  //   context: context,
+  //   builder: (context) => AlertDialog(
+  //     title: const Text('Error'),
+  //     content: const Text('Please fill out all fields'),
+  //     actions: [
+  //       TextButton(
+  //         onPressed: () => Navigator.pop(context),
+  //         child: const Text('OK'),
+  //       ),
+  //     ],
+  //   ),
+  // );
+
+  // Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //         builder: (context) => ProposalDocuments(
+  //               inwardData: inwardData,
+  //             )));
+  // if (customerType == 'Individual') {
+  //   Navigator.push(context,
+  //       MaterialPageRoute(builder: (context) => const KYCIndividual()));
+  // } else if (customerType == 'Other Individual') {
+  //   Navigator.push(
+  //       context, MaterialPageRoute(builder: (context) => const KYCForm()));
+  // }
+  // }
+  // }
 
   void initState() {
     super.initState();
@@ -314,12 +335,13 @@ class _MyFormState extends State<MyForm> {
                         hintText: "Please Select Inward Type",
                         value: _inwardType,
                         onChanged: (val) {
+                          if (val != _inwardType) {
+                            resetVariables();
+                          }
                           setState(() {
                             print(val);
+
                             _inwardType = val;
-                            if (val != _inwardType) {
-                              resetVariables();
-                            }
                           });
                         },
                       ),
@@ -363,7 +385,8 @@ class _MyFormState extends State<MyForm> {
                               ],
                             )
                           : Container(),
-                      _inwardType == 'Proposal'
+                      _inwardType == 'Proposal' ||
+                              _inwardType == 'Miscellaneous'
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -437,7 +460,9 @@ class _MyFormState extends State<MyForm> {
                         selectedBranch = value;
                       });
                     }, (val) {
-                      selectedSBIGBranch = val;
+                      setState(() {
+                        selectedSBIGBranch = val;
+                      });
                     }, selectedCode, selectedBranch, selectedSBIGBranch,
                         agreementCodeController),
                     _heightGap(),
@@ -623,7 +648,9 @@ class _MyFormState extends State<MyForm> {
                             hintText: "Select your instrument type",
                             value: selectedInstrumentType,
                             onChanged: (val) {
-                              selectedInstrumentType = val;
+                              setState(() {
+                                selectedInstrumentType = val;
+                              });
                             }),
                         _heightGap(),
                         CustomInputField(
@@ -673,52 +700,52 @@ class _MyFormState extends State<MyForm> {
                           date: instrumentDate,
                         ),
                         _heightGap(),
-                        Stack(
-                          children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    const Color.fromRGBO(13, 154, 189, 1),
-                                elevation: 10, // Elevation
-                                shadowColor:
-                                    const Color.fromRGBO(15, 5, 158, 0.3),
-                              ),
-                              onPressed: () {},
-                              child: const SizedBox(
-                                width: double.infinity,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Padding(
-                                    padding: EdgeInsets.fromLTRB(16, 12, 0, 12),
-                                    child: Text(
-                                      'Add More Instrument Type',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              right: 5,
-                              bottom: 0,
-                              top: 0,
-                              child: Material(
-                                color: Colors.white,
-                                shape: const CircleBorder(),
-                                child: IconButton(
-                                  onPressed: () {},
-                                  icon: const Icon(
-                                    Icons.add,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18.0),
+                        // Stack(
+                        //   children: [
+                        //     ElevatedButton(
+                        //       style: ElevatedButton.styleFrom(
+                        //         backgroundColor:
+                        //             const Color.fromRGBO(13, 154, 189, 1),
+                        //         elevation: 10, // Elevation
+                        //         shadowColor:
+                        //             const Color.fromRGBO(15, 5, 158, 0.3),
+                        //       ),
+                        //       onPressed: () {},
+                        //       child: const SizedBox(
+                        //         width: double.infinity,
+                        //         child: Align(
+                        //           alignment: Alignment.centerLeft,
+                        //           child: Padding(
+                        //             padding: EdgeInsets.fromLTRB(16, 12, 0, 12),
+                        //             child: Text(
+                        //               'Add More Instrument Type',
+                        //               style: TextStyle(
+                        //                 color: Colors.white,
+                        //               ),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //     Positioned(
+                        //       right: 5,
+                        //       bottom: 0,
+                        //       top: 0,
+                        //       child: Material(
+                        //         color: Colors.white,
+                        //         shape: const CircleBorder(),
+                        //         child: IconButton(
+                        //           onPressed: () {},
+                        //           icon: const Icon(
+                        //             Icons.add,
+                        //             color: Colors.black,
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ),
+                        //   ],
+                        // ),
+                        // const SizedBox(height: 18.0),
                       ],
                     ),
                     _heightGap(),

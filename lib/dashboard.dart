@@ -26,7 +26,7 @@ class _DashboardState extends State<Dashboard> {
     setState(() {
       _selectedIndex = index;
     });
-    if (index == 3) {
+    if (index == 2) {
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => const LoginScreen()));
     }
@@ -59,10 +59,10 @@ class _DashboardState extends State<Dashboard> {
             icon: Icon((Icons.group_add_outlined)),
             label: 'New User',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restart_alt_rounded),
-            label: 'Reset Password',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.restart_alt_rounded),
+          //   label: 'Reset Password',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.logout),
             label: 'Logout',
@@ -72,158 +72,158 @@ class _DashboardState extends State<Dashboard> {
         selectedItemColor: const Color.fromRGBO(15, 5, 158, 1),
         onTap: _onItemTapped,
       ),
-      drawer: SafeArea(
-        child: Drawer(
-          width: MediaQuery.of(context).size.width * 0.65,
-          // Add a ListView to the drawer. This ensures the user can scroll
-          // through the options in the drawer if there isn't enough vertical
-          // space to fit everything.
-          child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: [
-                DrawerHeader(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                  ),
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width / 3,
-                    height: MediaQuery.of(context).size.height / 5,
-                    child: const Wrap(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            SizedBox(
-                              height: 25,
-                            ),
-                            Text('Welcome,\nPravat',
-                                style: TextStyle(
-                                    color: Color.fromRGBO(105, 10, 124, 0.894),
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    // child: Image.asset('assets/logo.PNG'),
-                  ),
-                ),
-                Stack(
-                  children: [
-                    Column(
-                      children: [
-                        ListTile(
-                          title: const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                // Icon(Icons.notification_add_outlined,
-                                //     color: Color.fromRGBO(15, 5, 158, 1)),
-                                Text('1  Prototype',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color.fromRGBO(15, 5, 158, 1)))
-                              ]),
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(_createRoute(const Dashboard()));
-                            // Navigator.pushReplacement(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) => const Dashboard()));
-                          },
-                        ),
-                        ListTile(
-                          title: const Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                // Icon(Icons.notification_add_outlined,
-                                //     color: Color.fromRGBO(15, 5, 158, 1)),
-                                Text('2  Prototype',
-                                    style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color.fromRGBO(15, 5, 158, 1)))
-                              ]),
-                          onTap: () {
-                            Navigator.of(context)
-                                .push(_createRoute(const InwardStatus2()));
-                            // Navigator.pushReplacement(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //         builder: (context) =>
-                            //             const InwardStatus2()));
-                          },
-                        ),
-                        // ListTile(
-                        //   title: const Row(
-                        //       mainAxisAlignment: MainAxisAlignment.start,
-                        //       children: [
-                        //         Icon(Icons.notification_add_outlined,
-                        //             color: Color.fromRGBO(15, 5, 158, 1)),
-                        //         Text('  Notifications',
-                        //             style: TextStyle(
-                        //                 fontSize: 15,
-                        //                 fontWeight: FontWeight.w600,
-                        //                 color: Color.fromRGBO(15, 5, 158, 1)))
-                        //       ]),
-                        //   onTap: () {},
-                        // ),
-                        // ListTile(
-                        //   title: const Row(
-                        //       mainAxisAlignment: MainAxisAlignment.start,
-                        //       children: [
-                        //         Icon(Icons.group_add_outlined,
-                        //             color: Color.fromRGBO(15, 5, 158, 1)),
-                        //         Text('  New User',
-                        //             style: TextStyle(
-                        //                 fontSize: 15,
-                        //                 fontWeight: FontWeight.w600,
-                        //                 color: Color.fromRGBO(15, 5, 158, 1)))
-                        //       ]),
-                        //   onTap: () {},
-                        // ),
-                        // ListTile(
-                        //   title: const Row(
-                        //       mainAxisAlignment: MainAxisAlignment.start,
-                        //       children: [
-                        //         Icon(Icons.restart_alt_rounded,
-                        //             color: Color.fromRGBO(15, 5, 158, 1)),
-                        //         Text('  New User',
-                        //             style: TextStyle(
-                        //                 fontSize: 15,
-                        //                 fontWeight: FontWeight.w600,
-                        //                 color: Color.fromRGBO(15, 5, 158, 1)))
-                        //       ]),
-                        //   onTap: () {},
-                        // ),
-                        // ListTile(
-                        //   title: const Row(
-                        //       mainAxisAlignment: MainAxisAlignment.start,
-                        //       children: [
-                        //         Icon(Icons.logout,
-                        //             color: Color.fromRGBO(15, 5, 158, 1)),
-                        //         Text('  Log Out',
-                        //             style: TextStyle(
-                        //                 fontSize: 15,
-                        //                 fontWeight: FontWeight.w600,
-                        //                 color: Color.fromRGBO(15, 5, 158, 1)))
-                        //       ]),
-                        //   onTap: () {
-                        //     Navigator.pushReplacement(
-                        //         context,
-                        //         MaterialPageRoute(
-                        //             builder: (context) => const LoginScreen()));
-                        //   },
-                        // ),
-                      ],
-                    ),
-                  ],
-                )
-              ]),
-        ),
-      ),
+      // drawer: SafeArea(
+      //   child: Drawer(
+      //     width: MediaQuery.of(context).size.width * 0.65,
+      //     // Add a ListView to the drawer. This ensures the user can scroll
+      //     // through the options in the drawer if there isn't enough vertical
+      //     // space to fit everything.
+      //     child: ListView(
+      //         // Important: Remove any padding from the ListView.
+      //         padding: EdgeInsets.zero,
+      //         children: [
+      //           DrawerHeader(
+      //             decoration: const BoxDecoration(
+      //               color: Colors.white,
+      //             ),
+      //             child: SizedBox(
+      //               width: MediaQuery.of(context).size.width / 3,
+      //               height: MediaQuery.of(context).size.height / 5,
+      //               child: const Wrap(
+      //                 children: [
+      //                   Row(
+      //                     mainAxisAlignment: MainAxisAlignment.start,
+      //                     children: [
+      //                       SizedBox(
+      //                         height: 25,
+      //                       ),
+      //                       Text('Welcome,\nPravat',
+      //                           style: TextStyle(
+      //                               color: Color.fromRGBO(105, 10, 124, 0.894),
+      //                               fontSize: 22,
+      //                               fontWeight: FontWeight.bold)),
+      //                     ],
+      //                   ),
+      //                 ],
+      //               ),
+      //               // child: Image.asset('assets/logo.PNG'),
+      //             ),
+      //           ),
+      //           Stack(
+      //             children: [
+      //               Column(
+      //                 children: [
+      //                   ListTile(
+      //                     title: const Row(
+      //                         mainAxisAlignment: MainAxisAlignment.start,
+      //                         children: [
+      //                           // Icon(Icons.notification_add_outlined,
+      //                           //     color: Color.fromRGBO(15, 5, 158, 1)),
+      //                           Text('1  Prototype',
+      //                               style: TextStyle(
+      //                                   fontSize: 15,
+      //                                   fontWeight: FontWeight.w600,
+      //                                   color: Color.fromRGBO(15, 5, 158, 1)))
+      //                         ]),
+      //                     onTap: () {
+      //                       Navigator.of(context)
+      //                           .push(_createRoute(const Dashboard()));
+      //                       // Navigator.pushReplacement(
+      //                       //     context,
+      //                       //     MaterialPageRoute(
+      //                       //         builder: (context) => const Dashboard()));
+      //                     },
+      //                   ),
+      //                   ListTile(
+      //                     title: const Row(
+      //                         mainAxisAlignment: MainAxisAlignment.start,
+      //                         children: [
+      //                           // Icon(Icons.notification_add_outlined,
+      //                           //     color: Color.fromRGBO(15, 5, 158, 1)),
+      //                           Text('2  Prototype',
+      //                               style: TextStyle(
+      //                                   fontSize: 15,
+      //                                   fontWeight: FontWeight.w600,
+      //                                   color: Color.fromRGBO(15, 5, 158, 1)))
+      //                         ]),
+      //                     onTap: () {
+      //                       Navigator.of(context)
+      //                           .push(_createRoute(const InwardStatus2()));
+      //                       // Navigator.pushReplacement(
+      //                       //     context,
+      //                       //     MaterialPageRoute(
+      //                       //         builder: (context) =>
+      //                       //             const InwardStatus2()));
+      //                     },
+      //                   ),
+      //                   // ListTile(
+      //                   //   title: const Row(
+      //                   //       mainAxisAlignment: MainAxisAlignment.start,
+      //                   //       children: [
+      //                   //         Icon(Icons.notification_add_outlined,
+      //                   //             color: Color.fromRGBO(15, 5, 158, 1)),
+      //                   //         Text('  Notifications',
+      //                   //             style: TextStyle(
+      //                   //                 fontSize: 15,
+      //                   //                 fontWeight: FontWeight.w600,
+      //                   //                 color: Color.fromRGBO(15, 5, 158, 1)))
+      //                   //       ]),
+      //                   //   onTap: () {},
+      //                   // ),
+      //                   // ListTile(
+      //                   //   title: const Row(
+      //                   //       mainAxisAlignment: MainAxisAlignment.start,
+      //                   //       children: [
+      //                   //         Icon(Icons.group_add_outlined,
+      //                   //             color: Color.fromRGBO(15, 5, 158, 1)),
+      //                   //         Text('  New User',
+      //                   //             style: TextStyle(
+      //                   //                 fontSize: 15,
+      //                   //                 fontWeight: FontWeight.w600,
+      //                   //                 color: Color.fromRGBO(15, 5, 158, 1)))
+      //                   //       ]),
+      //                   //   onTap: () {},
+      //                   // ),
+      //                   // ListTile(
+      //                   //   title: const Row(
+      //                   //       mainAxisAlignment: MainAxisAlignment.start,
+      //                   //       children: [
+      //                   //         Icon(Icons.restart_alt_rounded,
+      //                   //             color: Color.fromRGBO(15, 5, 158, 1)),
+      //                   //         Text('  New User',
+      //                   //             style: TextStyle(
+      //                   //                 fontSize: 15,
+      //                   //                 fontWeight: FontWeight.w600,
+      //                   //                 color: Color.fromRGBO(15, 5, 158, 1)))
+      //                   //       ]),
+      //                   //   onTap: () {},
+      //                   // ),
+      //                   // ListTile(
+      //                   //   title: const Row(
+      //                   //       mainAxisAlignment: MainAxisAlignment.start,
+      //                   //       children: [
+      //                   //         Icon(Icons.logout,
+      //                   //             color: Color.fromRGBO(15, 5, 158, 1)),
+      //                   //         Text('  Log Out',
+      //                   //             style: TextStyle(
+      //                   //                 fontSize: 15,
+      //                   //                 fontWeight: FontWeight.w600,
+      //                   //                 color: Color.fromRGBO(15, 5, 158, 1)))
+      //                   //       ]),
+      //                   //   onTap: () {
+      //                   //     Navigator.pushReplacement(
+      //                   //         context,
+      //                   //         MaterialPageRoute(
+      //                   //             builder: (context) => const LoginScreen()));
+      //                   //   },
+      //                   // ),
+      //                 ],
+      //               ),
+      //             ],
+      //           )
+      //         ]),
+      //   ),
+      // ),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,

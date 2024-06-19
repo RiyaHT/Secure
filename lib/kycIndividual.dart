@@ -1,15 +1,23 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:secure_app/DatePickerFormField.dart';
 import 'package:secure_app/DropdownWidget.dart';
+import 'package:secure_app/crypto-utils.dart';
 import 'package:secure_app/customInputContainer%201.dart';
+import 'package:secure_app/dioSingleton.dart';
 import 'package:secure_app/inwardForm%201.dart';
+import 'package:secure_app/uploadProposal.dart';
 
 class KYCIndividual extends StatefulWidget {
-  const KYCIndividual({super.key});
+  final inwardData;
+  final inwardType;
+  const KYCIndividual(
+      {super.key, required this.inwardData, required this.inwardType});
 
   @override
   State<KYCIndividual> createState() => _KYCIndividualState();
@@ -19,13 +27,15 @@ class _KYCIndividualState extends State<KYCIndividual> {
   File? galleryFile;
   final picker = ImagePicker();
   String? _modeOfSubmission;
-  String _modeOfSubmission1 = '';
-  String _modeOfSubmission2 = '';
-  String _gender = '';
-  String _member = '';
+  // String _modeOfSubmission1 = '';
+  // String _modeOfSubmission2 = '';
+  // String _gender = '';
+  // String _member = '';
   String? selectedValue;
   String? selectedDocument;
   String? selectedAddress;
+
+  final controller1 = TextEditingController();
   String birthDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
   List<String> documents = <String>[
     'PAN Card',
@@ -39,6 +49,116 @@ class _KYCIndividualState extends State<KYCIndividual> {
     'Driving License',
     'Masked Aadhar'
   ];
+  var _accessToken = '';
+  bool isFetched = false;
+  TextEditingController panNumberController = TextEditingController();
+  Dio dio = DioSingleton.dio;
+
+  void initState() {
+    super.initState();
+    // getToken();
+    // fetchCKYC();
+  }
+
+  getToken() async {
+    Map<String, dynamic> headers = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      "Accept": "application/json",
+      "X-IBM-Client-Id": "03d37cba-bb30-42ef-a7b5-90eff137e085",
+      "X-IBM-Client-Secret":
+          "aE0fW4iF6sJ0dF0vR5qT1jO3oL3bK5gI6lL1mF2vP1jF4yH3hE"
+    };
+    try {
+      final response = await dio.get('  https://devapi.sbigeneral.in/v1/tokens',
+          options: Options(headers: headers));
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.data);
+        _accessToken = data['token'];
+      }
+    } catch (e) {}
+  }
+
+  fetchCKYC() async {
+    Map<String, dynamic> post = {
+      "A99RequestData": {
+        "RequestId": "GROMO1718086711165",
+        "source": "gromoinsure",
+        "policyNumber": "",
+        "GetRecordType": "IND",
+        "InputIdType": "C",
+        "InputIdNo": "BPCPB4053E",
+        "DateOfBirth": "10-06-1994",
+        "MobileNumber": "",
+        "Pincode": "",
+        "BirthYear": "",
+        "Tags": "",
+        "ApplicationRefNumber": "",
+        "FirstName": "",
+        "MiddleName": "",
+        "LastName": "",
+        "Gender": "",
+        "ResultLimit": "Latest",
+        "photo": "",
+        "AdditionalAction": ""
+      }
+
+      // {
+      //   "A99RequestData": {
+      //     "RequestId": "A9901",
+      //     "source": "SOA",
+      //     "policyNumber": "",
+      //     "GetRecordType": "IND",
+      //     "InputIdType": "C",
+      //     "InputIdNo": "BJDPK1684F",
+      //     "DateOfBirth": "11-02-1990",
+      //     "MobileNumber": "",
+      //     "Pincode": "",
+      //     "BirthYear": "",
+      //     "Tags": "",
+      //     "ApplicationRefNumber": "",
+      //     "FirstName": "",
+      //     "MiddleName": "",
+      //     "LastName": "",
+      //     "Gender": "",
+      //     "ResultLimit": "Latest",
+      //     "photo": "",
+      //     "AdditionalAction": ""
+      //   }
+      // "source": "gromoinsure",
+      // "policyNumber": "",
+      // "GetRecordType": "IND",
+      // "InputIdType": "C",
+      // "InputIdNo": panNumberController.text,
+      // "DateOfBirth": birthDate,
+    };
+    String key = 'CQuYCxIVNyTOt487084UPBMxhS0XxRE4';
+    String base64iv = 'w6tmvKzUj6Rg';
+    String result = aesGcmEncryptJson(jsonEncode(post), key, base64iv);
+
+    print(result);
+    // Map<String, dynamic> postData = {
+    //   "encryptedData": result,
+    //   "key": key,
+    //   "base64IV": base64iv,
+    // };
+
+    // Map<String, dynamic> headers = {
+    //   'Content-Type': 'application/json; charset=UTF-8',
+    //   "Accept": "application/json",
+    //   "X-IBM-Client-Id": "03d37cba-bb30-42ef-a7b5-90eff137e085",
+    //   "X-IBM-Client-Secret":
+    //       "aE0fW4iF6sJ0dF0vR5qT1jO3oL3bK5gI6lL1mF2vP1jF4yH3hE",
+    //   "Authorization": 'Bearer ${_accessToken}'
+    // };
+    // try {
+    //   final response = await dio.post(
+    //       'https://devapi.sbigeneral.in/ept/v1/portalCkycV',
+    //       data: postData,
+    //       options: Options(headers: headers));
+    //   var decryptedData = aesGcmDecryptJson(response.data, key, base64iv);
+    //   final Map<String, dynamic> data = jsonDecode(decryptedData);
+    // } catch (e) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,8 +236,11 @@ class _KYCIndividualState extends State<KYCIndividual> {
                 DatePickerFormField(
                   labelText: 'Date of Birth',
                   onChanged: (DateTime? value) {
-                    birthDate =
-                        DateFormat('yyyy-MM-dd').format(value as DateTime);
+                    setState(() {
+                      birthDate =
+                          DateFormat('yyyy-MM-dd').format(value as DateTime);
+                    });
+
                     print('Selected date: $value');
                   },
                   date: birthDate,
@@ -128,6 +251,7 @@ class _KYCIndividualState extends State<KYCIndividual> {
                   ? Column(
                       children: [
                         CustomInputField(
+                          controller: controller1,
                           title: 'CKYC ID',
                           hintText: 'Enter CKYC ID',
                           validator: (value) {
@@ -146,7 +270,20 @@ class _KYCIndividualState extends State<KYCIndividual> {
                             color: Color.fromRGBO(11, 133, 163, 1),
                           ),
                           child: TextButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                print('done');
+                                if (controller1.text == '12345671234567' &&
+                                    birthDate == '1990-04-12') {
+                                  setState(() {
+                                    isFetched = true;
+                                  });
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Invalid CKYC ID!')),
+                                  );
+                                }
+                              },
                               child: const Text(
                                 'Fetch CKYC Details',
                                 style: TextStyle(color: Colors.white),
@@ -155,168 +292,221 @@ class _KYCIndividualState extends State<KYCIndividual> {
                       ],
                     )
                   : Container(),
-              _modeOfSubmission == 'No'
+              _heightGap(),
+              _heightGap(),
+              _heightGap(),
+              isFetched
                   ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _customRadio('Do you have PAN?', _modeOfSubmission1,
-                            (value) {
-                          setState(() {
-                            _modeOfSubmission1 = value;
-                          });
-                        }),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.only(left: 15, right: 15),
+                          decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: const Color.fromRGBO(11, 133, 163, 1),
+                                  width: 2),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _heightGap(),
+                              _text('Customer Name: Test User'),
+                              _heightGap(),
+                              _text('CKYC ID: 12345671234567'),
+                              _heightGap(),
+                              _text('DOB: 12-04-1990'),
+                              _heightGap(),
+                            ],
+                          ),
+                        ),
                         _heightGap(),
-                        _modeOfSubmission1 == 'Yes'
-                            ? Column(
-                                children: [
-                                  CustomInputField(
-                                    title: 'PAN Number',
-                                    hintText: 'Enter PAN Number',
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return 'Please Enter the PAN Number';
-                                      } else if (int.parse(value) == 0) {
-                                        return 'Please Enter valid PAN Number';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _heightGap(),
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(10)),
-                                      color: Color.fromRGBO(11, 133, 163, 1),
-                                    ),
-                                    child: TextButton(
-                                        onPressed: () {},
-                                        child: const Text(
-                                          'Fetch CKYC Details',
-                                          style: TextStyle(color: Colors.white),
-                                        )),
-                                  )
-                                ],
-                              )
-                            : Container(),
-                        _modeOfSubmission1 == 'No'
-                            ? Column(
-                                children: [
-                                  _customRadio('Do you have Aadhar Card?',
-                                      _modeOfSubmission2, (value) {
-                                    setState(() {
-                                      _modeOfSubmission2 = value;
-                                    });
-                                  }),
-                                  _heightGap(),
-                                  _modeOfSubmission2 == 'Yes'
-                                      ? Column(
-                                          children: [
-                                            CustomInputField(
-                                              title:
-                                                  'Enter Last 4 digits of Aadhar Number',
-                                              hintText:
-                                                  'Enter Last 4 digits of Aadhar Number',
-                                              validator: (value) {
-                                                if (value!.isEmpty) {
-                                                  return 'Please Enter the Aadhar Card Number';
-                                                } else if (int.parse(value) ==
-                                                    0) {
-                                                  return 'Please Enter valid Aadhar Card Number';
-                                                }
-                                                return null;
-                                              },
-                                            ),
-                                            _heightGap(),
-                                            _heightGap(),
-                                            const CustomInputField(
-                                              title:
-                                                  'Customer Full Name as per Aadhar Card',
-                                              hintText:
-                                                  'Enter Customer Full Name as per Aadhar Card',
-                                            ),
-                                            _heightGap(),
-                                            _customRadio2('Gender:', _gender,
-                                                (value) {
-                                              setState(() {
-                                                _gender = value;
-                                              });
-                                            }, 'Male', 'Female', 'Transgender'),
-                                            _heightGap(),
-                                            Container(
-                                              decoration: const BoxDecoration(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(10)),
-                                                color: Color.fromRGBO(
-                                                    11, 133, 163, 1),
-                                              ),
-                                              child: TextButton(
-                                                  onPressed: () {},
-                                                  child: const Text(
-                                                    'Fetch CKYC Details',
-                                                    style: TextStyle(
-                                                        color: Colors.white),
-                                                  )),
-                                            )
-                                          ],
-                                        )
-                                      : Container(),
-                                  _modeOfSubmission2 == 'No'
-                                      ? Column(
-                                          children: [
-                                            _customRadio2(
-                                                'Family Details:', _member,
-                                                (value) {
-                                              setState(() {
-                                                _member = value;
-                                              });
-                                            },
-                                                'Spouse \nDetails',
-                                                "Father's \nDetails",
-                                                "Mother's \nDetails"),
-                                            _heightGap(),
-                                            _member == 'Spouse \nDetails' ||
-                                                    _member ==
-                                                        "Father's \nDetails" ||
-                                                    _member ==
-                                                        "Mother's \nDetails"
-                                                ? Column(
-                                                    children: [
-                                                      const CustomInputField(
-                                                        title: 'Salutation',
-                                                        hintText:
-                                                            'Enter Salutation',
-                                                      ),
-                                                      _nameDetails(),
-                                                      _ckycDocuments(),
-                                                      _addressProof(),
-                                                    ],
-                                                  )
-                                                : Container(),
-                                            Container(
-                                              decoration: const BoxDecoration(
-                                                borderRadius: BorderRadius.all(
-                                                    Radius.circular(10)),
-                                                color: Color.fromRGBO(
-                                                    11, 133, 163, 1),
-                                              ),
-                                              child: TextButton(
-                                                  onPressed: () {},
-                                                  child: const Text(
-                                                    'Submit CKYC',
-                                                    style: TextStyle(
-                                                        color: Colors.white),
-                                                  )),
-                                            ),
-                                            _heightGap(),
-                                          ],
-                                        )
-                                      : Container(),
-                                ],
-                              )
-                            : Container(),
+                        Container(
+                          decoration: const BoxDecoration(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            color: Color.fromRGBO(11, 133, 163, 1),
+                          ),
+                          child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => ProposalDocuments(
+                                            inwardData: widget.inwardData,
+                                            inwardType: widget.inwardType)));
+                              },
+                              child: const Text(
+                                'Submit CKYC',
+                                style: TextStyle(color: Colors.white),
+                              )),
+                        )
                       ],
                     )
-                  : Container(),
-              _heightGap(),
+                  : Container()
+
+              // _modeOfSubmission == 'No'
+              //     ? Column(
+              //         children: [
+              //           _customRadio('Do you have PAN?', _modeOfSubmission1,
+              //               (value) {
+              //             setState(() {
+              //               _modeOfSubmission1 = value;
+              //             });
+              //           }),
+              //           _heightGap(),
+              //           _modeOfSubmission1 == 'Yes'
+              //               ? Column(
+              //                   children: [
+              //                     CustomInputField(
+              //                       controller: panNumberController,
+              //                       title: 'PAN Number',
+              //                       hintText: 'Enter PAN Number',
+              //                       validator: (value) {
+              //                         if (value!.isEmpty) {
+              //                           return 'Please Enter the PAN Number';
+              //                         } else if (int.parse(value) == 0) {
+              //                           return 'Please Enter valid PAN Number';
+              //                         }
+              //                         return null;
+              //                       },
+              //                     ),
+              //                     _heightGap(),
+              //                     Container(
+              //                       decoration: const BoxDecoration(
+              //                         borderRadius:
+              //                             BorderRadius.all(Radius.circular(10)),
+              //                         color: Color.fromRGBO(11, 133, 163, 1),
+              //                       ),
+              //                       child: TextButton(
+              //                           onPressed: () {},
+              //                           child: const Text(
+              //                             'Fetch CKYC Details',
+              //                             style: TextStyle(color: Colors.white),
+              //                           )),
+              //                     )
+              //                   ],
+              //                 )
+              //               : Container(),
+              // _modeOfSubmission1 == 'No'
+              //     ? Column(
+              //         children: [
+              //           _customRadio('Do you have Aadhar Card?',
+              //               _modeOfSubmission2, (value) {
+              //             setState(() {
+              //               _modeOfSubmission2 = value;
+              //             });
+              //           }),
+              //           _heightGap(),
+              //           _modeOfSubmission2 == 'Yes'
+              //               ? Column(
+              //                   children: [
+              //                     CustomInputField(
+              //                       title:
+              //                           'Enter Last 4 digits of Aadhar Number',
+              //                       hintText:
+              //                           'Enter Last 4 digits of Aadhar Number',
+              //                       validator: (value) {
+              //                         if (value!.isEmpty) {
+              //                           return 'Please Enter the Aadhar Card Number';
+              //                         } else if (int.parse(value) ==
+              //                             0) {
+              //                           return 'Please Enter valid Aadhar Card Number';
+              //                         }
+              //                         return null;
+              //                       },
+              //                     ),
+              //                     _heightGap(),
+              //                     _heightGap(),
+              //                     const CustomInputField(
+              //                       title:
+              //                           'Customer Full Name as per Aadhar Card',
+              //                       hintText:
+              //                           'Enter Customer Full Name as per Aadhar Card',
+              //                     ),
+              //                     _heightGap(),
+              //                     _customRadio2('Gender:', _gender,
+              //                         (value) {
+              //                       setState(() {
+              //                         _gender = value;
+              //                       });
+              //                     }, 'Male', 'Female', 'Transgender'),
+              //                     _heightGap(),
+              //                     Container(
+              //                       decoration: const BoxDecoration(
+              //                         borderRadius: BorderRadius.all(
+              //                             Radius.circular(10)),
+              //                         color: Color.fromRGBO(
+              //                             11, 133, 163, 1),
+              //                       ),
+              //                       child: TextButton(
+              //                           onPressed: () {},
+              //                           child: const Text(
+              //                             'Fetch CKYC Details',
+              //                             style: TextStyle(
+              //                                 color: Colors.white),
+              //                           )),
+              //                     )
+              //                   ],
+              //                 )
+              //               : Container(),
+              //           _modeOfSubmission2 == 'No'
+              //               ? Column(
+              //                   children: [
+              //                     _customRadio2(
+              //                         'Family Details:', _member,
+              //                         (value) {
+              //                       setState(() {
+              //                         _member = value;
+              //                       });
+              //                     },
+              //                         'Spouse \nDetails',
+              //                         "Father's \nDetails",
+              //                         "Mother's \nDetails"),
+              //                     _heightGap(),
+              //                     _member == 'Spouse \nDetails' ||
+              //                             _member ==
+              //                                 "Father's \nDetails" ||
+              //                             _member ==
+              //                                 "Mother's \nDetails"
+              //                         ? Column(
+              //                             children: [
+              //                               const CustomInputField(
+              //                                 title: 'Salutation',
+              //                                 hintText:
+              //                                     'Enter Salutation',
+              //                               ),
+              //                               _nameDetails(),
+              //                               _ckycDocuments(),
+              //                               _addressProof(),
+              //                             ],
+              //                           )
+              //                         : Container(),
+              //                     Container(
+              //                       decoration: const BoxDecoration(
+              //                         borderRadius: BorderRadius.all(
+              //                             Radius.circular(10)),
+              //                         color: Color.fromRGBO(
+              //                             11, 133, 163, 1),
+              //                       ),
+              //                       child: TextButton(
+              //                           onPressed: () {},
+              //                           child: const Text(
+              //                             'Submit CKYC',
+              //                             style: TextStyle(
+              //                                 color: Colors.white),
+              //                           )),
+              //                     ),
+              //                     _heightGap(),
+              //                   ],
+              //                 )
+              //               : Container(),
+              //     ],
+              //   )
+              // : Container(),
+              //     ],
+              //   )
+              // : Container(),
+              // _heightGap(),
             ]))));
   }
 
