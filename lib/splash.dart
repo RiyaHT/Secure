@@ -1,15 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:secure_app/InwardDetails.dart';
-import 'package:secure_app/inwardForm%201.dart';
+import 'package:secure_app/dashboard.dart';
 import 'package:secure_app/inwardScreen.dart';
 import 'package:secure_app/kycIndividual.dart';
-// import 'package:secure_app/inwardForm%201.dart';
-// import 'package:secure_app/kyc.dart';
 import 'package:secure_app/layout.dart';
 import 'package:secure_app/login.dart';
-import 'package:secure_app/uploadProposal.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -43,10 +39,8 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }),
     );
-    // () => Navigator.pushReplacement(
-    //     context,
-    //     MaterialPageRoute(
-    //         builder: (context) => const InwardDetailsScreen())));
+    // () => Navigator.pushReplacement(context,
+    //     MaterialPageRoute(builder: (context) => const Dashboard())));
 
     return Scaffold(
         body: Container(

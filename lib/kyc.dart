@@ -10,24 +10,30 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:secure_app/DatePickerFormField.dart';
 import 'package:secure_app/DropdownWidget.dart';
 import 'package:secure_app/crypto-utils.dart';
 import 'package:secure_app/customInputContainer%201.dart';
 import 'package:secure_app/dioSingleton.dart';
 import 'package:secure_app/uploadProposal.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class KYCForm extends StatefulWidget {
-  const KYCForm({super.key});
+  final inwardData;
+  final inwardType;
+  const KYCForm(
+      {super.key, required this.inwardData, required this.inwardType});
 
   @override
   State<KYCForm> createState() => _KYCFormState();
 }
 
 class _KYCFormState extends State<KYCForm> {
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   String? _modeOfSubmission;
-  String _modeOfSubmission1 = '';
-  String _modeOfSubmission2 = '';
+  String? _modeOfSubmission1;
+  String? _modeOfSubmission2;
   String? selectedValue;
   String? selectedDocument;
   String? selectedIdentity;
@@ -38,12 +44,19 @@ class _KYCFormState extends State<KYCForm> {
   String? selectedIdentity6;
   String? selectedIdentity7;
   String? selectedAddress;
-  String incorporationDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  String incorporationDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
   final controller1 = TextEditingController();
   var _accessToken = '';
   TextEditingController panNumberController = TextEditingController();
   bool isFetched = false;
-  File? _pdfFile;
+  Map ckycDocuments = {
+    "entityDocuments": [],
+    "identityProofDocuments": [],
+    "addressProofDocuments": []
+  };
+
+  bool isSubmitted = false;
+  bool fetchKYC = true;
   List<String> entity = <String>[
     'Sole Proprietorship',
     'Partnership Firm',
@@ -128,458 +141,794 @@ class _KYCFormState extends State<KYCForm> {
   final picker = ImagePicker();
   Dio dio = DioSingleton.dio;
 
-  Future<void> _pickPDF() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
-
-    if (result != null) {
-      setState(() {
-        _pdfFile = File(result.files.single.path!);
-        print(_pdfFile);
-      });
-    }
-  }
-
+  TextEditingController ckycIDController = TextEditingController();
+  TextEditingController companyIDController = TextEditingController();
+  TextEditingController idProofController = TextEditingController();
+  TextEditingController addressProofController = TextEditingController();
+  // Map ckycData = {};
+  bool isLoading = false;
+  Map ckycData = {
+    "ckycData": {"CKYCNumber": "", "CKYCFullName": "", "CKYCDOB": ""}
+  };
+  final _formKey = GlobalKey<FormState>();
+  String inputType = '';
+  String inputNo = '';
   void initState() {
     super.initState();
-    getToken();
   }
 
-  getToken() async {
-    Map<String, dynamic> headers = {
-      'Content-Type': 'application/json; charset=UTF-8',
-      "Accept": "application/json",
-      "X-IBM-Client-Id": "03d37cba-bb30-42ef-a7b5-90eff137e085",
-      "X-IBM-Client-Secret":
-          "aE0fW4iF6sJ0dF0vR5qT1jO3oL3bK5gI6lL1mF2vP1jF4yH3hE"
-    };
-    try {
-      final response = await dio.get('  https://devapi.sbigeneral.in/v1/tokens',
-          options: Options(headers: headers));
-      if (response.statusCode == 200) {
-        var data = jsonDecode(response.data);
-        _accessToken = data['token'];
-      }
-    } catch (e) {}
+  resetVariable() {
+    setState(() {
+      _modeOfSubmission1 = null;
+      _modeOfSubmission2 = null;
+      selectedValue = null;
+      selectedDocument = null;
+      selectedIdentity = null;
+      selectedIdentity2 = null;
+      selectedIdentity3 = null;
+      selectedIdentity4 = null;
+      selectedIdentity5 = null;
+      selectedIdentity6 = null;
+      selectedIdentity7 = null;
+      selectedAddress = null;
+      ckycIDController = TextEditingController();
+      companyIDController = TextEditingController();
+      idProofController = TextEditingController();
+      addressProofController = TextEditingController();
+      incorporationDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+    });
+    // String _member = '';
   }
 
   fetchCKYC() async {
-    Map<String, dynamic> post = {
-      "source": "gromoinsure",
-      "policyNumber": "",
-      "GetRecordType": "IND",
-      "InputIdType": "C",
-      "InputIdNo": panNumberController.text,
-      "DateOfBirth": incorporationDate,
+    setState(() {
+      isLoading = true;
+    });
+    SharedPreferences prefs = await _prefs;
+    var token = prefs.getString('token') ?? '';
+    Map<String, dynamic> kycData = {
+      "A99RequestData": {
+        "RequestId": "ITSECURE${DateTime.now().millisecondsSinceEpoch}",
+        "source": "gromoinsure",
+        "policyNumber": "",
+        "GetRecordType": "IND",
+        "InputIdType": inputType,
+        "InputIdNo": inputNo,
+        "DateOfBirth": incorporationDate,
+        "MobileNumber": "",
+        "Pincode": "",
+        "BirthYear": "",
+        "Tags": "",
+        "ApplicationRefNumber": "",
+        "FirstName": '',
+        "MiddleName": '',
+        "LastName": '',
+        "Gender": "",
+        "ResultLimit": "Latest",
+        "photo": "",
+        "AdditionalAction": ""
+      }
     };
-    String key = 'umHvMuR3lmtAis1HVWC11nwj2ONfck6j';
-    String base64iv = 'UaQv9FXbLZ4=';
-    String result = aesGcmEncryptJson(jsonEncode(post), key, base64iv);
 
-    Map<String, dynamic> postData = {
-      "encryptedData": result,
-      "key": key,
-      "base64IV": base64iv,
-    };
+    print(kycData);
 
-    Map<String, dynamic> headers = {
+    Map<String, String> headers = {
       'Content-Type': 'application/json; charset=UTF-8',
       "Accept": "application/json",
-      "X-IBM-Client-Id": "03d37cba-bb30-42ef-a7b5-90eff137e085",
-      "X-IBM-Client-Secret":
-          "aE0fW4iF6sJ0dF0vR5qT1jO3oL3bK5gI6lL1mF2vP1jF4yH3hE",
-      "Authorization": 'Bearer ${_accessToken}'
+      "Authorization": token
     };
     try {
       final response = await dio.post(
-          'https://devapi.sbigeneral.in/ept/v1/portalCkycV',
-          data: postData,
+          'https://uatcld.sbigeneral.in/SecureApp/ckyc',
+          data: kycData,
           options: Options(headers: headers));
-      var decryptedData = aesGcmDecryptJson(response.data, key, base64iv);
-      final Map<String, dynamic> data = jsonDecode(decryptedData);
-    } catch (e) {}
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.data);
+        setState(() {
+          isFetched = true;
+          ckycData = data;
+          isLoading = false;
+          isSubmitted = true;
+          fetchKYC = false;
+        });
+      }
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+        fetchKYC = true;
+        isFetched = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text("No Records Found!"),
+          action: SnackBarAction(
+            label: ' Cancel',
+            onPressed: () {},
+          )));
+    }
+  }
+
+  void _submitKYC() {
+    Map kycData = {
+      "ckyc_num": ckycIDController.text,
+      "customer_type": "Individual",
+      "pan_num": panNumberController.text,
+      "doc_addr_proof_number": addressProofController.text,
+      "cin": companyIDController.text,
+      "response_ckyc_num": ckycData['ckycData']['CKYCFullName'],
+      "response_ckyc_dob	date": ckycData['ckycData']['CKYCNumber'],
+      "response_ckyc_customer_name": ckycData['ckycData']['CKYCDOB']
+    };
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => ProposalDocuments(
+                inwardData: widget.inwardData,
+                inwardType: widget.inwardType,
+                ckycData: kycData,
+                ckycDocuments: ckycDocuments['entityDocuments']! +
+                    ckycDocuments['identityProofDocuments']! +
+                    ckycDocuments['addressProofDocuments']!)));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back),
-          color: Colors.white,
-        ),
-        title: const Text(
-          'KYC Module',
-          style: TextStyle(
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color.fromRGBO(13, 154, 189, 1),
-        titleTextStyle: const TextStyle(color: Colors.white),
-      ),
-      body: Container(
-        padding: const EdgeInsets.all(15),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Wrap(spacing: 2, children: [
-                Text(
-                  'CKYC Available?* ',
-                  maxLines: 5,
-                  style: TextStyle(
-                      color: Color.fromRGBO(11, 133, 163, 1),
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '(W.e.f 01st January 2023, CKYC ID creation is mandatory for all the policies at the time of Inception of risk for both Individual and Organization Customers) ',
-                  maxLines: 6,
-                  style: TextStyle(
-                    color: Color.fromRGBO(11, 133, 163, 1),
-                    fontSize: 11,
-                  ),
-                ),
-              ]),
-              Row(
-                children: [
-                  Radio(
-                    activeColor: const Color.fromRGBO(13, 154, 189, 1),
-                    autofocus: false,
-                    value: 'Yes',
-                    groupValue: _modeOfSubmission,
-                    onChanged: (value) {
-                      setState(() {
-                        _modeOfSubmission = value;
-                      });
-                    },
-                  ),
-                  const Text('Yes'),
-                  Radio(
-                    activeColor: const Color.fromRGBO(13, 154, 189, 1),
-                    autofocus: false,
-                    value: 'No',
-                    groupValue: _modeOfSubmission,
-                    onChanged: (value) {
-                      setState(() {
-                        _modeOfSubmission = value;
-                      });
-                    },
-                  ),
-                  const Text('No'),
-                ],
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              icon: const Icon(Icons.arrow_back),
+              color: Colors.white,
+            ),
+            title: const Text(
+              'KYC Module',
+              style: TextStyle(
+                fontSize: 20,
               ),
-              _heightGap(),
-              CustomInputContainer(children: [
-                DatePickerFormField(
-                  labelText: 'Date of Incorporation',
-                  onChanged: (DateTime? value) {
-                    setState(() {
-                      incorporationDate =
-                          DateFormat('yyyy-MM-dd').format(value as DateTime);
-                    });
-                    print('Selected date: $value');
-                  },
-                  date: incorporationDate,
-                ),
-              ]),
-              _heightGap(),
-              _modeOfSubmission == 'Yes'
-                  ? Column(
+            ),
+            centerTitle: true,
+            backgroundColor: const Color.fromRGBO(13, 154, 189, 1),
+            titleTextStyle: const TextStyle(color: Colors.white),
+          ),
+          body: Form(
+            key: _formKey,
+            child: Container(
+              padding: const EdgeInsets.all(15),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const Wrap(spacing: 2, children: [
+                      Text(
+                        'CKYC Available?* ',
+                        maxLines: 5,
+                        style: TextStyle(
+                            color: Color.fromRGBO(11, 133, 163, 1),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '(W.e.f 01st January 2023, CKYC ID creation is mandatory for all the policies at the time of Inception of risk for both Individual and Organization Customers) ',
+                        maxLines: 6,
+                        style: TextStyle(
+                          color: Color.fromRGBO(11, 133, 163, 1),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ]),
+                    Row(
                       children: [
-                        CustomInputField(
-                          controller: controller1,
-                          title: 'CKYC ID',
-                          hintText: 'Enter CKYC ID',
-                          validator: (value) {
-                            if (value!.isEmpty) {
-                              return 'Please Enter the CKYC ID';
-                            } else if (int.parse(value) == 0) {
-                              return 'Please Enter valid CKYC';
+                        Radio(
+                          activeColor: const Color.fromRGBO(13, 154, 189, 1),
+                          autofocus: false,
+                          value: 'Yes',
+                          groupValue: _modeOfSubmission,
+                          onChanged: (value) {
+                            if (_modeOfSubmission != value) {
+                              resetVariable();
                             }
-                            return null;
+                            setState(() {
+                              _modeOfSubmission = value;
+                            });
                           },
                         ),
-                        _heightGap(),
-                        Container(
-                          decoration: const BoxDecoration(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                            color: Color.fromRGBO(11, 133, 163, 1),
-                          ),
-                          child: TextButton(
-                              onPressed: () {
-                                print('done');
-                                if (controller1.text == '12345671234567') {
-                                  setState(() {
-                                    isFetched = true;
-                                  });
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Invalid CKYC ID')),
-                                  );
-                                }
-                              },
-                              child: const Text(
-                                'Fetch CKYC Details',
-                                style: TextStyle(color: Colors.white),
-                              )),
+                        const Text('Yes'),
+                        Radio(
+                          activeColor: const Color.fromRGBO(13, 154, 189, 1),
+                          autofocus: false,
+                          value: 'No',
+                          groupValue: _modeOfSubmission,
+                          onChanged: (value) {
+                            if (_modeOfSubmission != value) {
+                              resetVariable();
+                            }
+                            setState(() {
+                              _modeOfSubmission = value;
+                            });
+                          },
                         ),
-                        _heightGap(),
-                        _heightGap(),
-                        _heightGap(),
-                        isFetched
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.only(
-                                        left: 15, right: 15),
-                                    decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: const Color.fromRGBO(
-                                                11, 133, 163, 1),
-                                            width: 2),
-                                        borderRadius:
-                                            BorderRadius.circular(10)),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _heightGap(),
-                                        _text(
-                                            'Customer Name: Abcde Fghijklmno'),
-                                        _heightGap(),
-                                        _text('CKYC ID: 12345671234567'),
-                                        _heightGap(),
-                                        _text('DOB: 12-04-1990'),
-                                        _heightGap(),
-                                      ],
-                                    ),
-                                  ),
-                                  _heightGap(),
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(10)),
-                                      color: Color.fromRGBO(11, 133, 163, 1),
-                                    ),
-                                    child: TextButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      ProposalDocuments(
-                                                          inwardData: {},
-                                                          inwardType: {})));
-                                        },
-                                        child: const Text(
-                                          'Submit CKYC',
-                                          style: TextStyle(color: Colors.white),
-                                        )),
-                                  )
-                                ],
-                              )
-                            : Container()
+                        const Text('No'),
                       ],
-                    )
-                  : Container(),
-              _modeOfSubmission == 'No'
-                  ? Column(
-                      children: [
-                        _heightGap(),
-                        _customRadio('Do you have PAN?', _modeOfSubmission1,
-                            (value) {
+                    ),
+                    _heightGap(),
+                    CustomInputContainer(children: [
+                      DatePickerFormField(
+                        labelText: 'Date of Incorporation',
+                        onChanged: (DateTime? value) {
                           setState(() {
-                            _modeOfSubmission1 = value;
+                            incorporationDate = DateFormat('dd-MM-yyyy')
+                                .format(value as DateTime);
                           });
-                        }),
-                        _modeOfSubmission1 == 'Yes'
-                            ? Column(
-                                children: [
-                                  CustomInputField(
-                                    controller: panNumberController,
-                                    title: 'PAN Number',
-                                    hintText: 'Enter PAN Number',
-                                    validator: (value) {
-                                      if (value!.isEmpty) {
-                                        return 'Please Enter the PAN Number';
-                                      } else if (int.parse(value) == 0) {
-                                        return 'Please Enter valid PAN Number';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  _heightGap(),
-                                  Container(
-                                    decoration: const BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(10)),
-                                      color: Color.fromRGBO(11, 133, 163, 1),
-                                    ),
-                                    child: TextButton(
-                                        onPressed: () {},
-                                        child: const Text(
-                                          'Fetch CKYC Details',
-                                          style: TextStyle(color: Colors.white),
-                                        )),
-                                  )
-                                ],
-                              )
-                            : Container(),
-                        //           _modeOfSubmission1 == 'No'
-                        //               ? Column(
-                        //                   children: [
-                        //                     _customRadio('Do you have Company ID Number?',
-                        //                         _modeOfSubmission2, (value) {
-                        //                       setState(() {
-                        //                         _modeOfSubmission2 = value;
-                        //                       });
-                        //                     }),
-                        //                     _modeOfSubmission2 == 'Yes'
-                        //                         ? Column(
-                        //                             children: [
-                        //                               CustomInputField(
-                        //                                 title: 'CIN',
-                        //                                 hintText: 'Enter CIN',
-                        //                                 validator: (value) {
-                        //                                   if (value!.isEmpty) {
-                        //                                     return 'Please Enter the CIN';
-                        //                                   } else if (int.parse(value) ==
-                        //                                       0) {
-                        //                                     return 'Please Enter valid CIN';
-                        //                                   }
-                        //                                   return null;
-                        //                                 },
-                        //                               ),
-                        //                               _heightGap(),
-                        //                               Container(
-                        //                                 decoration: const BoxDecoration(
-                        //                                   borderRadius: BorderRadius.all(
-                        //                                       Radius.circular(10)),
-                        //                                   color: Color.fromRGBO(
-                        //                                       11, 133, 163, 1),
-                        //                                 ),
-                        //                                 child: TextButton(
-                        //                                     onPressed: () {},
-                        //                                     child: const Text(
-                        //                                       'Fetch CKYC Details',
-                        //                                       style: TextStyle(
-                        //                                           color: Colors.white),
-                        //                                     )),
-                        //                               )
-                        //                             ],
-                        //                           )
-                        //                         : Container(),
-                        //                     _modeOfSubmission2 == 'No'
-                        //                         ? Column(
-                        //                             children: [
-                        //                               _customDropDown('Entity Type:',
-                        //                                   'Select Entity Type', (value) {
-                        //                                 setState(() {
-                        //                                   selectedValue = value;
-                        //                                   print(selectedValue);
-                        //                                 });
-                        //                               }, entity, selectedValue),
-                        //                               _heightGap(),
-                        //                               selectedValue ==
-                        //                                           'Sole Proprietorship' ||
-                        //                                       selectedValue ==
-                        //                                           'Liquidator'
-                        //                                   ? _identity1()
-                        //                                   : Container(),
-                        //                               selectedValue ==
-                        //                                           'Partnership Firm' ||
-                        //                                       selectedValue ==
-                        //                                           'Limited Liability Partnership' ||
-                        //                                       selectedValue ==
-                        //                                           'Artificial Liability Partnership'
-                        //                                   ? _identity(identity2)
-                        //                                   : Container(),
-                        //                               selectedValue == 'HUF' ||
-                        //                                       selectedValue ==
-                        //                                           'Associations of Persons'
-                        //                                   ? _identity(identity3)
-                        //                                   : Container(),
-                        //                               selectedValue ==
-                        //                                           'Private Limited Company' ||
-                        //                                       selectedValue ==
-                        //                                           'Public Limited Company' ||
-                        //                                       selectedValue ==
-                        //                                           'Section 8 Companies'
-                        //                                   ? _identity(identity4)
-                        //                                   : Container(),
-                        //                               selectedValue == 'Society'
-                        //                                   ? _identity(identity5)
-                        //                                   : Container(),
-                        //                               selectedValue == 'Trust'
-                        //                                   ? _identity(identity6)
-                        //                                   : Container(),
-                        //                               selectedValue ==
-                        //                                           'Public Sector Banks' ||
-                        //                                       selectedValue ==
-                        //                                           'Artificial Jurisdical Person'
-                        //                                   ? _identity(identity7)
-                        //                                   : Container(),
-                        //                               selectedIdentity ==
-                        //                                           'Activity Proof-1' ||
-                        //                                       selectedIdentity ==
-                        //                                           'Activity Proof-2'
-                        //                                   ? _activityProof()
-                        //                                   : Container(),
-                        //                               selectedIdentity ==
-                        //                                           'OVD in respect of person authorized to transact' ||
-                        //                                       selectedIdentity ==
-                        //                                           'Power of Atterney granted to Manager' ||
-                        //                                       selectedIdentity ==
-                        //                                           'Partnership Deed'
-                        //                                   ? _identityDocuments(address2)
-                        //                                   : Container(),
-                        //                               selectedIdentity ==
-                        //                                       'Registration Certificate'
-                        //                                   ? _registrationCertificate()
-                        //                                   : Container(),
-                        //                               selectedIdentity ==
-                        //                                       'Certificate of Incorporation/Formation'
-                        //                                   ? _certificate()
-                        //                                   : Container(),
-                        //                               _heightGap(),
-                        //                               Container(
-                        //                                 decoration: const BoxDecoration(
-                        //                                   borderRadius: BorderRadius.all(
-                        //                                       Radius.circular(10)),
-                        //                                   color: Color.fromRGBO(
-                        //                                       11, 133, 163, 1),
-                        //                                 ),
-                        //                                 child: TextButton(
-                        //                                     onPressed: () {},
-                        //                                     child: const Text(
-                        //                                       'Submit CKYC',
-                        //                                       style: TextStyle(
-                        //                                           color: Colors.white),
-                        //                                     )),
-                        //                               )
-                        //                             ],
-                        //                           )
-                        //                         : Container(),
-                        //                   ],
-                        //                 )
-                        //               : Container(),
-                        //           _heightGap(),
-                      ],
-                    )
-                  : Container(),
-            ],
+                          print('Selected date: $value');
+                        },
+                        date: incorporationDate,
+                      ),
+                    ]),
+                    _heightGap(),
+                    _modeOfSubmission == 'Yes'
+                        ? Column(
+                            children: [
+                              CustomInputField(
+                                controller: ckycIDController,
+                                title: 'CKYC ID',
+                                hintText: 'Enter CKYC ID',
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return 'Please Enter the CKYC ID';
+                                  } else if (int.parse(value) == 0) {
+                                    return 'Please Enter valid CKYC';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              _heightGap(),
+                              fetchKYC
+                                  ? Container(
+                                      decoration: const BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10)),
+                                        color: Color.fromRGBO(11, 133, 163, 1),
+                                      ),
+                                      child: TextButton(
+                                          onPressed: () {
+                                            print('done');
+                                            if (_modeOfSubmission != null) {
+                                              setState(() {
+                                                inputType = 'Z';
+                                                inputType =
+                                                    ckycIDController.text;
+                                              });
+                                              fetchCKYC();
+                                            } else {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'Please enter valid details!')),
+                                              );
+                                            }
+                                          },
+                                          child: const Text(
+                                            'Fetch CKYC Details',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          )),
+                                    )
+                                  : Container(),
+                              // Container(
+                              //   decoration: const BoxDecoration(
+                              //     borderRadius:
+                              //         BorderRadius.all(Radius.circular(10)),
+                              //     color: Color.fromRGBO(11, 133, 163, 1),
+                              //   ),
+                              //   child: TextButton(
+                              //       onPressed: () {
+                              //         print('done');
+                              //         if (controller1.text == '12345671234567') {
+                              //           setState(() {
+                              //             isFetched = true;
+                              //           });
+                              //         } else {
+                              //           ScaffoldMessenger.of(context).showSnackBar(
+                              //             const SnackBar(
+                              //                 content: Text('Invalid CKYC ID')),
+                              //           );
+                              //         }
+                              //       },
+                              //       child: const Text(
+                              //         'Fetch CKYC Details',
+                              //         style: TextStyle(color: Colors.white),
+                              //       )),
+                              // ),
+                              _heightGap(),
+                              // _heightGap(),
+                              // _heightGap(),
+                              // isFetched
+                              //     ? Column(
+                              //         crossAxisAlignment: CrossAxisAlignment.center,
+                              //         children: [
+                              //           Container(
+                              //             width: double.infinity,
+                              //             padding: const EdgeInsets.only(
+                              //                 left: 15, right: 15),
+                              //             decoration: BoxDecoration(
+                              //                 border: Border.all(
+                              //                     color: const Color.fromRGBO(
+                              //                         11, 133, 163, 1),
+                              //                     width: 2),
+                              //                 borderRadius:
+                              //                     BorderRadius.circular(10)),
+                              //             child: Column(
+                              //               crossAxisAlignment:
+                              //                   CrossAxisAlignment.start,
+                              //               children: [
+                              //                 _heightGap(),
+                              //                 _text(
+                              //                     'Customer Name: Abcde Fghijklmno'),
+                              //                 _heightGap(),
+                              //                 _text('CKYC ID: 12345671234567'),
+                              //                 _heightGap(),
+                              //                 _text('DOB: 12-04-1990'),
+                              //                 _heightGap(),
+                              //               ],
+                              //             ),
+                              //           ),
+                              //           _heightGap(),
+                              // Container(
+                              //   decoration: const BoxDecoration(
+                              //     borderRadius: BorderRadius.all(
+                              //         Radius.circular(10)),
+                              //     color: Color.fromRGBO(11, 133, 163, 1),
+                              //   ),
+                              //   child: TextButton(
+                              //       onPressed: () {
+                              //         Navigator.push(
+                              //             context,
+                              //             MaterialPageRoute(
+                              //                 builder: (context) =>
+                              //                     ProposalDocuments(
+                              //                       inwardData: {},
+                              //                       inwardType: {},
+                              //                       ckycData: {},
+                              //                       ckycDocuments: [],
+                              //                     )));
+                              //       },
+                              //       child: const Text(
+                              //         'Submit CKYC',
+                              //         style:
+                              //             TextStyle(color: Colors.white),
+                              //       )),
+                              // )
+                              //     ],
+                              //   )
+                              // : Container()
+                            ],
+                          )
+                        : Container(),
+                    _modeOfSubmission == 'No'
+                        ? Column(
+                            children: [
+                              _heightGap(),
+                              _customRadio(
+                                  'Do you have PAN?', _modeOfSubmission1!,
+                                  (value) {
+                                if (_modeOfSubmission1 != value) {
+                                  setState(() {
+                                    _modeOfSubmission2 = null;
+                                    selectedValue = null;
+                                    selectedDocument = null;
+                                    selectedIdentity = null;
+                                    selectedIdentity2 = null;
+                                    selectedIdentity3 = null;
+                                    selectedIdentity4 = null;
+                                    selectedIdentity5 = null;
+                                    selectedIdentity6 = null;
+                                    selectedIdentity7 = null;
+                                    selectedAddress = null;
+                                    ckycIDController = TextEditingController();
+                                    companyIDController =
+                                        TextEditingController();
+                                    idProofController = TextEditingController();
+                                    addressProofController =
+                                        TextEditingController();
+                                    incorporationDate = DateFormat('dd-MM-yyyy')
+                                        .format(DateTime.now());
+                                  });
+                                }
+
+                                setState(() {
+                                  _modeOfSubmission1 = value;
+                                });
+                              }),
+                              _modeOfSubmission1 == 'Yes'
+                                  ? Column(
+                                      children: [
+                                        CustomInputField(
+                                          controller: panNumberController,
+                                          title: 'PAN Number',
+                                          hintText: 'Enter PAN Number',
+                                          // validator: (value) {
+                                          //   if (value!.isEmpty) {
+                                          //     return 'Please Enter the PAN Number';
+                                          //   } else if (int.parse(value) == 0) {
+                                          //     return 'Please Enter valid PAN Number';
+                                          //   }
+                                          //   return null;
+                                          // },
+                                        ),
+                                        _heightGap(),
+                                        Container(
+                                          decoration: const BoxDecoration(
+                                            borderRadius: BorderRadius.all(
+                                                Radius.circular(10)),
+                                            color:
+                                                Color.fromRGBO(11, 133, 163, 1),
+                                          ),
+                                          child: TextButton(
+                                              onPressed: () {
+                                                print('done');
+                                                if (_modeOfSubmission1 !=
+                                                        null &&
+                                                    _formKey.currentState!
+                                                        .validate()) {
+                                                  setState(() {
+                                                    inputType = 'C';
+                                                    inputNo =
+                                                        panNumberController
+                                                            .text;
+                                                  });
+                                                  fetchCKYC();
+                                                } else {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                        content: Text(
+                                                            'Please enter valid details!')),
+                                                  );
+                                                }
+                                              },
+                                              child: const Text(
+                                                'Fetch CKYC Details',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              )),
+                                        ),
+                                        // Container(
+                                        //   decoration: const BoxDecoration(
+                                        //     borderRadius: BorderRadius.all(
+                                        //         Radius.circular(10)),
+                                        //     color: Color.fromRGBO(11, 133, 163, 1),
+                                        //   ),
+                                        //   child: TextButton(
+                                        //       onPressed: () {},
+                                        //       child: const Text(
+                                        //         'Fetch CKYC Details',
+                                        //         style:
+                                        //             TextStyle(color: Colors.white),
+                                        //       )),
+                                        // )
+                                      ],
+                                    )
+                                  : Container(),
+                              _modeOfSubmission1 == 'No'
+                                  ? Column(
+                                      children: [
+                                        _customRadio(
+                                            'Do you have Company ID Number?',
+                                            _modeOfSubmission2!, (value) {
+                                          if (_modeOfSubmission2 != value) {
+                                            setState(() {
+                                              selectedValue = null;
+                                              selectedDocument = null;
+                                              selectedIdentity = null;
+                                              selectedIdentity2 = null;
+                                              selectedIdentity3 = null;
+                                              selectedIdentity4 = null;
+                                              selectedIdentity5 = null;
+                                              selectedIdentity6 = null;
+                                              selectedIdentity7 = null;
+                                              selectedAddress = null;
+                                              ckycIDController =
+                                                  TextEditingController();
+                                              companyIDController =
+                                                  TextEditingController();
+                                              idProofController =
+                                                  TextEditingController();
+                                              addressProofController =
+                                                  TextEditingController();
+                                              incorporationDate =
+                                                  DateFormat('dd-MM-yyyy')
+                                                      .format(DateTime.now());
+                                            });
+                                          }
+                                          setState(() {
+                                            _modeOfSubmission2 = value;
+                                          });
+                                        }),
+                                        _modeOfSubmission2 == 'Yes'
+                                            ? Column(
+                                                children: [
+                                                  CustomInputField(
+                                                    controller:
+                                                        companyIDController,
+                                                    title: 'CIN',
+                                                    hintText: 'Enter CIN',
+                                                    // validator: (value) {
+                                                    //   if (value!.isEmpty) {
+                                                    //     return 'Please Enter the CIN';
+                                                    //   } else if (int.parse(value) ==
+                                                    //       0) {
+                                                    //     return 'Please Enter valid CIN';
+                                                    //   }
+                                                    //   return null;
+                                                    // },
+                                                  ),
+                                                  _heightGap(),
+                                                  Container(
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  10)),
+                                                      color: Color.fromRGBO(
+                                                          11, 133, 163, 1),
+                                                    ),
+                                                    child: TextButton(
+                                                        onPressed: () {
+                                                          print('done');
+                                                          if (_modeOfSubmission1 !=
+                                                                  null &&
+                                                              _formKey
+                                                                  .currentState!
+                                                                  .validate()) {
+                                                            setState(() {
+                                                              inputType = '';
+                                                              inputNo =
+                                                                  companyIDController
+                                                                      .text;
+                                                            });
+                                                            fetchCKYC();
+                                                          } else {
+                                                            ScaffoldMessenger
+                                                                    .of(context)
+                                                                .showSnackBar(
+                                                              const SnackBar(
+                                                                  content: Text(
+                                                                      'Please enter valid details!')),
+                                                            );
+                                                          }
+                                                        },
+                                                        child: const Text(
+                                                          'Fetch CKYC Details',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        )),
+                                                  )
+                                                  // Container(
+                                                  //   decoration: const BoxDecoration(
+                                                  //     borderRadius:
+                                                  //         BorderRadius.all(
+                                                  //             Radius.circular(10)),
+                                                  //     color: Color.fromRGBO(
+                                                  //         11, 133, 163, 1),
+                                                  //   ),
+                                                  //   child: TextButton(
+                                                  //       onPressed: () {},
+                                                  //       child: const Text(
+                                                  //         'Fetch CKYC Details',
+                                                  //         style: TextStyle(
+                                                  //             color: Colors.white),
+                                                  //       )),
+                                                  // )
+                                                ],
+                                              )
+                                            : Container(),
+                                        _modeOfSubmission2 == 'No'
+                                            ? Column(
+                                                children: [
+                                                  _customDropDown(
+                                                      'Entity Type:',
+                                                      'Select Entity Type',
+                                                      (value) {
+                                                    setState(() {
+                                                      selectedValue = value;
+                                                      print(selectedValue);
+                                                    });
+                                                  }, entity, selectedValue),
+                                                  _heightGap(),
+                                                  selectedValue ==
+                                                              'Sole Proprietorship' ||
+                                                          selectedValue ==
+                                                              'Liquidator'
+                                                      ? _identity1()
+                                                      : Container(),
+                                                  selectedValue ==
+                                                              'Partnership Firm' ||
+                                                          selectedValue ==
+                                                              'Limited Liability Partnership' ||
+                                                          selectedValue ==
+                                                              'Artificial Liability Partnership'
+                                                      ? _identity(identity2)
+                                                      : Container(),
+                                                  selectedValue == 'HUF' ||
+                                                          selectedValue ==
+                                                              'Associations of Persons'
+                                                      ? _identity(identity3)
+                                                      : Container(),
+                                                  selectedValue ==
+                                                              'Private Limited Company' ||
+                                                          selectedValue ==
+                                                              'Public Limited Company' ||
+                                                          selectedValue ==
+                                                              'Section 8 Companies'
+                                                      ? _identity(identity4)
+                                                      : Container(),
+                                                  selectedValue == 'Society'
+                                                      ? _identity(identity5)
+                                                      : Container(),
+                                                  selectedValue == 'Trust'
+                                                      ? _identity(identity6)
+                                                      : Container(),
+                                                  selectedValue ==
+                                                              'Public Sector Banks' ||
+                                                          selectedValue ==
+                                                              'Artificial Jurisdical Person'
+                                                      ? _identity(identity7)
+                                                      : Container(),
+                                                  selectedIdentity ==
+                                                              'Activity Proof-1' ||
+                                                          selectedIdentity ==
+                                                              'Activity Proof-2'
+                                                      ? _activityProof()
+                                                      : Container(),
+                                                  selectedIdentity ==
+                                                              'OVD in respect of person authorized to transact' ||
+                                                          selectedIdentity ==
+                                                              'Power of Atterney granted to Manager' ||
+                                                          selectedIdentity ==
+                                                              'Partnership Deed'
+                                                      ? _identityDocuments(
+                                                          address2)
+                                                      : Container(),
+                                                  selectedIdentity ==
+                                                          'Registration Certificate'
+                                                      ? _registrationCertificate()
+                                                      : Container(),
+                                                  selectedIdentity ==
+                                                          'Certificate of Incorporation/Formation'
+                                                      ? _certificate()
+                                                      : Container(),
+                                                  _heightGap(),
+                                                  Container(
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.all(
+                                                              Radius.circular(
+                                                                  10)),
+                                                      color: Color.fromRGBO(
+                                                          11, 133, 163, 1),
+                                                    ),
+                                                    child: TextButton(
+                                                        onPressed: () {},
+                                                        child: const Text(
+                                                          'Submit CKYC',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                        )),
+                                                  )
+                                                ],
+                                              )
+                                            : Container(),
+                                      ],
+                                    )
+                                  : Container(),
+                              _heightGap(),
+                            ],
+                          )
+                        : Container(),
+                    _heightGap(),
+                    isFetched
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _heightGap(),
+                              _heightGap(),
+                              _heightGap(),
+                              Container(
+                                width: double.infinity,
+                                padding:
+                                    const EdgeInsets.only(left: 15, right: 15),
+                                decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: const Color.fromRGBO(
+                                            11, 133, 163, 1),
+                                        width: 2),
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _heightGap(),
+                                    _text(
+                                        'Customer Name: ${ckycData['ckycData']['CKYCFullName']}'),
+                                    _heightGap(),
+                                    _text(
+                                        'CKYC ID: ${ckycData['ckycData']['CKYCNumber']}'),
+                                    _heightGap(),
+                                    _text(
+                                        'DOI: ${ckycData['ckycData']['CKYCDOB']}'),
+                                    _heightGap(),
+                                  ],
+                                ),
+                              ),
+                              _heightGap(),
+                              isSubmitted
+                                  ? Container(
+                                      decoration: const BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10)),
+                                        color: Color.fromRGBO(11, 133, 163, 1),
+                                      ),
+                                      child: TextButton(
+                                          onPressed: () {
+                                            _submitKYC();
+                                          },
+                                          child: const Text(
+                                            'Submit CKYC',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          )),
+                                    )
+                                  : Container()
+                            ],
+                          )
+                        : Container(),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-      ),
+        isLoading
+            ? Positioned(
+                top: 0,
+                right: 0,
+                left: 0,
+                bottom: 0,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height,
+                  decoration:
+                      BoxDecoration(color: Colors.white.withOpacity(0.5)),
+                  child: Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                        const Text('Loading Data...',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color.fromRGBO(15, 5, 158, 1),
+                            )),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        LoadingAnimationWidget.threeArchedCircle(
+                          color: const Color.fromRGBO(15, 5, 158, 1),
+                          size: 50,
+                        ),
+                      ])),
+                ),
+              )
+            : Container()
+      ],
     );
   }
 
@@ -610,7 +959,7 @@ class _KYCFormState extends State<KYCForm> {
         }, documents, selectedDocument),
         _heightGap(),
         selectedDocument == 'PAN Card' || selectedDocument == 'Form 60'
-            ? _uploadDocument()
+            ? _uploadDocument('identyProofDocuments', 0)
             : Container(),
         _heightGap(),
         _customDropDown('Proof of Identity:', 'Select option', (value) {
@@ -628,7 +977,7 @@ class _KYCFormState extends State<KYCForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _heightGap(),
-        _uploadDocument(),
+        _uploadDocument('identyProofDocuments', 0),
         _heightGap(),
         _addressProof(address)
       ],
@@ -652,7 +1001,7 @@ class _KYCFormState extends State<KYCForm> {
           },
         ),
         _heightGap(),
-        _uploadDocument()
+        _uploadDocument('addressProofDocuments', 0)
       ],
     );
   }
@@ -674,14 +1023,17 @@ class _KYCFormState extends State<KYCForm> {
           },
         ),
         _heightGap(),
-        _uploadDocument()
+        _uploadDocument('addressProofDocuments', 0)
       ],
     );
   }
 
   _activityProof() {
     return Column(
-      children: [_uploadDocument(), _addressProof(address1)],
+      children: [
+        _uploadDocument('addressProofDocuments', 0),
+        _addressProof(address1)
+      ],
     );
   }
 
@@ -695,7 +1047,7 @@ class _KYCFormState extends State<KYCForm> {
             fontWeight: FontWeight.bold),
       ),
       _heightGap(),
-      _uploadDocument(),
+      _uploadDocument('entityDocuments', 0),
       _heightGap()
     ]);
   }
@@ -790,7 +1142,7 @@ class _KYCFormState extends State<KYCForm> {
                     },
                   ),
                   _heightGap(),
-                  _uploadDocument()
+                  _uploadDocument('addressProofDocuments', 0)
                 ],
               )
             : Container(),
@@ -813,7 +1165,7 @@ class _KYCFormState extends State<KYCForm> {
                   const SizedBox(
                     height: 10,
                   ),
-                  _uploadDocument()
+                  _uploadDocument('addressProofDocuments', 0)
                 ],
               )
             : Container(),
@@ -824,7 +1176,81 @@ class _KYCFormState extends State<KYCForm> {
     );
   }
 
-  _uploadDocument() {
+  // _uploadDocument(String type, index) {
+  //   return Stack(
+  //     clipBehavior: Clip.none,
+  //     children: [
+  //       Container(
+  //         height: 120.0,
+  //         width: 140.0,
+  //         decoration: BoxDecoration(
+  //             borderRadius: BorderRadius.circular(6),
+  //             border: Border.all(
+  //                 color: const Color.fromRGBO(13, 154, 189, 1), width: 2)),
+  //         child: galleryFile == null && _pdfFile == null
+  //             ? Padding(
+  //                 padding: const EdgeInsets.all(10),
+  //                 child: ElevatedButton(
+  //                   style: ElevatedButton.styleFrom(
+  //                       shape: RoundedRectangleBorder(
+  //                           borderRadius: BorderRadius.circular(6)),
+  //                       backgroundColor:
+  //                           const Color.fromARGB(169, 235, 234, 234)),
+  //                   child: const Text(
+  //                     'Upload\nDocument',
+  //                     textAlign: TextAlign.center,
+  //                     style: TextStyle(
+  //                       fontWeight: FontWeight.bold,
+  //                       fontSize: 13,
+  //                       color: Color.fromRGBO(11, 133, 163, 1),
+  //                     ),
+  //                   ),
+  //                   onPressed: () {
+  //                     _showPicker(context: context);
+  //                   },
+  //                 ),
+  //               )
+  //             : Padding(
+  //                 padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+  //                 child: Center(
+  //                     child: _pdfFile != null
+  //                         ? PDFView(
+  //                             filePath: _pdfFile!.path,
+  //                             enableSwipe: true,
+  //                             swipeHorizontal: true,
+  //                             autoSpacing: false,
+  //                             pageSnap: true,
+  //                           )
+  //                         : galleryFile != null
+  //                             ? Image.file(galleryFile!)
+  //                             : Container()),
+  //               ),
+  //       ),
+  //       galleryFile != null || _pdfFile != null
+  //           ? Positioned(
+  //               top: -20,
+  //               right: -30,
+  //               child: TextButton(
+  //                   child: const Text(
+  //                     'X',
+  //                     style: TextStyle(
+  //                       fontSize: 18,
+  //                       color: Colors.red,
+  //                     ),
+  //                   ),
+  //                   onPressed: () {
+  //                     setState(() {
+  //                       _pdfFile = null;
+  //                       galleryFile = null;
+  //                     });
+  //                   }),
+  //             )
+  //           : Container()
+  //     ],
+  //   );
+  // }
+
+  _uploadDocument(String type, int index) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -835,72 +1261,93 @@ class _KYCFormState extends State<KYCForm> {
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                   color: const Color.fromRGBO(13, 154, 189, 1), width: 2)),
-          child: galleryFile == null && _pdfFile == null
+          child: ckycDocuments[type]!.isNotEmpty
               ? Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Center(
+                    child: ckycDocuments[type]![index].path.endsWith('.pdf')
+                        ? PDFView(
+                            filePath: ckycDocuments[type]![index].path,
+                            enableSwipe: true,
+                            swipeHorizontal: true,
+                            autoSpacing: false,
+                            pageSnap: true,
+                          )
+                        : Image.file(ckycDocuments[type]![index]),
+                  ),
+                )
+              : Padding(
                   padding: const EdgeInsets.all(10),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(6)),
-                        backgroundColor:
-                            const Color.fromARGB(169, 235, 234, 234)),
-                    child: const Text(
-                      'Upload\nDocument',
+                        backgroundColor: Color.fromRGBO(235, 234, 234, 0.663)),
+                    child: Text(
+                      "Upload\nDocument",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                         color: Color.fromRGBO(11, 133, 163, 1),
                       ),
                     ),
                     onPressed: () {
-                      _showPicker(context: context);
+                      _showPicker(context: context, type: type, index: index);
                     },
                   ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                  child: Center(
-                      child: _pdfFile != null
-                          ? PDFView(
-                              filePath: _pdfFile!.path,
-                              enableSwipe: true,
-                              swipeHorizontal: true,
-                              autoSpacing: false,
-                              pageSnap: true,
-                            )
-                          : galleryFile != null
-                              ? Image.file(galleryFile!)
-                              : Container()),
                 ),
         ),
-        galleryFile != null || _pdfFile != null
+        ckycDocuments[type]!.length > index
             ? Positioned(
                 top: -20,
                 right: -30,
                 child: TextButton(
-                    child: const Text(
-                      'X',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.red,
-                      ),
+                  child: const Text(
+                    'X',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.red,
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _pdfFile = null;
-                        galleryFile = null;
-                      });
-                    }),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      ckycDocuments[type]!.removeAt(index);
+                    });
+                  },
+                ),
               )
-            : Container()
+            : const Text('')
       ],
     );
   }
 
-  void _showPicker({
-    required BuildContext context,
-  }) {
+  Future<void> _pickPDF(String type, int index) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'],
+    );
+
+    if (result != null) {
+      setState(() {
+        if (ckycDocuments[type]!.length > index) {
+          ckycDocuments[type]![index] = File(result.files.single.path!);
+        } else {
+          ckycDocuments[type]!.add(File(result.files.single.path!));
+        }
+      });
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No document selected')),
+      );
+    }
+  }
+
+  void _showPicker(
+      {required BuildContext context,
+      required String type,
+      required int index}) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -911,7 +1358,7 @@ class _KYCFormState extends State<KYCForm> {
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Photo Library'),
                 onTap: () {
-                  getImage(ImageSource.gallery);
+                  getImage(ImageSource.gallery, type, index);
                   Navigator.of(context).pop();
                 },
               ),
@@ -919,7 +1366,7 @@ class _KYCFormState extends State<KYCForm> {
                 leading: const Icon(Icons.photo_camera),
                 title: const Text('Camera'),
                 onTap: () {
-                  getImage(ImageSource.camera);
+                  getImage(ImageSource.camera, type, index);
                   Navigator.of(context).pop();
                 },
               ),
@@ -927,7 +1374,7 @@ class _KYCFormState extends State<KYCForm> {
                 leading: const Icon(Icons.upload_file),
                 title: const Text('PDF'),
                 onTap: () {
-                  _pickPDF();
+                  _pickPDF(type, index);
                   Navigator.of(context).pop();
                 },
               ),
@@ -938,21 +1385,21 @@ class _KYCFormState extends State<KYCForm> {
     );
   }
 
-  Future getImage(
-    ImageSource img,
-  ) async {
+  Future getImage(ImageSource img, String type, int index) async {
     final pickedFile = await picker.pickImage(source: img);
-    XFile? xfilePick = pickedFile;
-    setState(
-      () {
-        if (xfilePick != null) {
-          galleryFile = File(pickedFile!.path);
+    if (pickedFile != null) {
+      setState(() {
+        if (ckycDocuments[type]!.length > index) {
+          ckycDocuments[type]![index] = File(pickedFile.path);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(// is this context <<<
-              const SnackBar(content: Text('Nothing is selected')));
+          ckycDocuments[type]!.add(File(pickedFile.path));
         }
-      },
-    );
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No document selected')),
+      );
+    }
   }
 
   _text(String text) {

@@ -3,13 +3,12 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:secure_app/dioSingleton.dart';
 import 'package:secure_app/layout.dart';
-import 'package:secure_app/otp.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'customProvider.dart';
@@ -55,6 +54,9 @@ class _RegisterBoxState extends State<RegisterBox> {
         _prefs.then((SharedPreferences pref) => {
               pref.setString('token', data['token']),
             });
+        appState.updateVariables(
+          name: data['username'],
+        );
         Map<String, dynamic> postData = {'user_id': widget.controller.text};
         Map<String, String> headers2 = {
           'Content-Type': 'application/json; charset=UTF-8',

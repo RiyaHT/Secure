@@ -53,6 +53,7 @@ dependencies:
   encrypt: ^5.0.3
   crypto: ^3.0.3
   animated_check: ^1.0.0
+  url_launcher: ^6.3.0
   
 flutter_icons:
   web: true
@@ -90,6 +91,9 @@ flutter:
     - assets/form.png
     - assets/new_logo.jpg
     - assets/new_secure.PNG
+    - assets/web-image1.webp
+    - assets/web-image2.webp
+    - assets/web-image3.webp
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

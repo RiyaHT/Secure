@@ -9,6 +9,7 @@ import 'package:secure_app/DropdownWidget.dart';
 import 'package:secure_app/RenderForm.dart';
 import 'package:secure_app/commonFunction.dart';
 import 'package:secure_app/customInputContainer%201.dart';
+import 'package:secure_app/kyc.dart';
 import 'package:secure_app/kycIndividual.dart';
 
 // import 'package:secure_app/kyc.dart';
@@ -208,14 +209,23 @@ class _MyFormState extends State<MyForm> {
         //         onPressed: () {},
         //       )));
         ) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => KYCIndividual(
-                  inwardData: _inwardType == 'Endorsement'
-                      ? endorsementData2
-                      : inwardData,
-                  inwardType: _inwardType)));
+      customerType == 'Individual'
+          ? Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => KYCIndividual(
+                      inwardData: _inwardType == 'Endorsement'
+                          ? endorsementData2
+                          : inwardData,
+                      inwardType: _inwardType)))
+          : Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => KYCForm(
+                      inwardData: _inwardType == 'Endorsement'
+                          ? endorsementData2
+                          : inwardData,
+                      inwardType: _inwardType)));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: const Text("Please fill all the mandatory fields!"),

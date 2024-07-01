@@ -117,6 +117,7 @@ class LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     print(MediaQuery.of(context).size.height / 10);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,

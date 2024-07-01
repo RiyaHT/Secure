@@ -16,11 +16,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 class ProposalDocuments extends StatefulWidget {
-  final inwardData;
+  final Map inwardData;
   final inwardType;
+  final Map ckycData;
+  final List ckycDocuments;
 
   ProposalDocuments(
-      {super.key, required this.inwardData, required this.inwardType});
+      {super.key,
+      required this.inwardData,
+      required this.inwardType,
+      required this.ckycData,
+      required this.ckycDocuments});
 
   @override
   State<ProposalDocuments> createState() => _ProposalDocumentsState();
@@ -64,22 +70,36 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
     try {
       final response = await dio.post(
           'https://uatcld.sbigeneral.in/SecureApp/proposalDetails',
-          data: widget.inwardData,
+          data: {
+            ...widget.inwardData,
+            "ckycDetails": {...widget.ckycData}
+          },
           options: Options(headers: headers));
 
       if (response.statusCode == 201) {
         final Map<String, dynamic> data = jsonDecode(response.data);
         print(data);
         var formData = FormData();
+        var formData2 = FormData();
         formData.fields
             .add(MapEntry('proposal_id', data['proposal']['id'].toString()));
         formData.fields.add(const MapEntry('doc_type', 'proposal'));
+        formData2.fields
+            .add(MapEntry('proposal_id', data['proposal']['id'].toString()));
+        formData2.fields.add(const MapEntry('doc_type', 'ckyc'));
         for (var file in documents['proposalDocuments']!) {
           formData.files.add(MapEntry(
               'files',
               await MultipartFile.fromFile(file.path,
                   filename: file.path.split('/').last)));
         }
+        for (var file in widget.ckycDocuments) {
+          formData2.files.add(MapEntry(
+              'files',
+              await MultipartFile.fromFile(file.path,
+                  filename: file.path.split('/').last)));
+        }
+        print(formData);
         try {
           final response = await dio.post(
               'https://uatcld.sbigeneral.in/SecureApp/proposalDocument',
@@ -98,7 +118,32 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
           print(error.message);
           // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text("Form not submitted. Try again!"),
+              content:
+                  const Text("Proposal Documents not submitted. Try again!"),
+              action: SnackBarAction(
+                label: ' Cancel',
+                onPressed: () {},
+              )));
+        }
+        try {
+          final response2 = await dio.post(
+              'https://uatcld.sbigeneral.in/SecureApp/proposalDocument',
+              data: formData2,
+              options: Options(headers: headers2));
+
+          print('form submitted of ckyc');
+          setState(() {
+            isSubmitted = true;
+            isLoading = false;
+          });
+        } on DioException catch (error) {
+          setState(() {
+            isLoading = false;
+          });
+          print(error.message);
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text("CKYC Documents not submitted. Try again!"),
               action: SnackBarAction(
                 label: ' Cancel',
                 onPressed: () {},
@@ -136,21 +181,36 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
     try {
       final response = await dio.post(
           'https://uatcld.sbigeneral.in/SecureApp/endorsementDetails',
-          data: widget.inwardData,
+          data: {
+            ...widget.inwardData,
+            "ckycDetails": {...widget.ckycData}
+          },
           options: Options(headers: headers));
 
       if (response.statusCode == 201) {
         final Map<String, dynamic> data = jsonDecode(response.data);
+        print(data);
         var formData = FormData();
+        var formData2 = FormData();
         formData.fields
             .add(MapEntry('proposal_id', data['proposal']['id'].toString()));
         formData.fields.add(const MapEntry('doc_type', 'proposal'));
+        formData2.fields
+            .add(MapEntry('proposal_id', data['proposal']['id'].toString()));
+        formData2.fields.add(const MapEntry('doc_type', 'ckyc'));
         for (var file in documents['proposalDocuments']!) {
           formData.files.add(MapEntry(
               'files',
               await MultipartFile.fromFile(file.path,
                   filename: file.path.split('/').last)));
         }
+        for (var file in widget.ckycDocuments) {
+          formData2.files.add(MapEntry(
+              'files',
+              await MultipartFile.fromFile(file.path,
+                  filename: file.path.split('/').last)));
+        }
+        print(formData);
         try {
           final response = await dio.post(
               'https://uatcld.sbigeneral.in/SecureApp/proposalDocument',
@@ -169,7 +229,32 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
           print(error.message);
           // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: const Text("Form not submitted. Try again!"),
+              content:
+                  const Text("Proposal Documents not submitted. Try again!"),
+              action: SnackBarAction(
+                label: ' Cancel',
+                onPressed: () {},
+              )));
+        }
+        try {
+          final response2 = await dio.post(
+              'https://uatcld.sbigeneral.in/SecureApp/proposalDocument',
+              data: formData2,
+              options: Options(headers: headers2));
+
+          print('form submitted of ckyc');
+          setState(() {
+            isSubmitted = true;
+            isLoading = false;
+          });
+        } on DioException catch (error) {
+          setState(() {
+            isLoading = false;
+          });
+          print(error.message);
+          // ignore: use_build_context_synchronously
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: const Text("CKYC Documents not submitted. Try again!"),
               action: SnackBarAction(
                 label: ' Cancel',
                 onPressed: () {},
@@ -190,6 +275,76 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
           )));
     }
   }
+  // uploadEndorsement() async {
+  //   setState(() {
+  //     isLoading = true;
+  //   });
+  //   SharedPreferences prefs = await _prefs;
+  //   var token = prefs.getString('token') ?? '';
+  //   Map<String, String> headers = {
+  //     'Content-Type': 'application/json; charset=UTF-8',
+  //     "Accept": "application/json",
+  //     "Authorization": token
+  //   };
+  //   Map<String, String> headers2 = {"Authorization": token};
+
+  //   try {
+  //     final response = await dio.post(
+  //         'https://uatcld.sbigeneral.in/SecureApp/endorsementDetails',
+  //         data: widget.inwardData,
+  //         options: Options(headers: headers));
+
+  //     if (response.statusCode == 201) {
+  //       final Map<String, dynamic> data = jsonDecode(response.data);
+  //       var formData = FormData();
+  //       formData.fields
+  //           .add(MapEntry('proposal_id', data['proposal']['id'].toString()));
+  //       formData.fields.add(const MapEntry('doc_type', 'proposal'));
+  //       for (var file in documents['proposalDocuments']!) {
+  //         formData.files.add(MapEntry(
+  //             'files',
+  //             await MultipartFile.fromFile(file.path,
+  //                 filename: file.path.split('/').last)));
+  //       }
+  //       try {
+  //         final response = await dio.post(
+  //             'https://uatcld.sbigeneral.in/SecureApp/proposalDocument',
+  //             data: formData,
+  //             options: Options(headers: headers2));
+
+  //         print('form submitted');
+  //         setState(() {
+  //           isSubmitted = true;
+  //           isLoading = false;
+  //         });
+  //       } on DioException catch (error) {
+  //         setState(() {
+  //           isLoading = false;
+  //         });
+  //         print(error.message);
+  //         // ignore: use_build_context_synchronously
+  //         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //             content: const Text("Form not submitted. Try again!"),
+  //             action: SnackBarAction(
+  //               label: ' Cancel',
+  //               onPressed: () {},
+  //             )));
+  //       }
+  //     }
+  //   } on DioException catch (error) {
+  //     setState(() {
+  //       isLoading = false;
+  //     });
+  //     print(error.message);
+  //     // ignore: use_build_context_synchronously
+  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+  //         content: const Text("Form not submitted. Try again!"),
+  //         action: SnackBarAction(
+  //           label: ' Cancel',
+  //           onPressed: () {},
+  //         )));
+  //   }
+  // }
   // uploadEndorsement() async {
   //   // String apiLink = dotenv.env['API_LINK']!;
   //   // final appState = Provider.of<AppState>(context, listen: false);
@@ -349,105 +504,6 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
                     ),
                   ),
                 ),
-                isSubmitted
-                    ? Positioned(
-                        // left: 20,
-                        // right: 20,
-                        // top: 40,
-                        // bottom: 40,
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: MediaQuery.of(context).size.width,
-                              height: MediaQuery.of(context).size.height,
-                              decoration:
-                                  const BoxDecoration(color: Colors.black38),
-                            ),
-                            Center(
-                              child: Container(
-                                margin:
-                                    const EdgeInsets.fromLTRB(40, 160, 40, 160),
-                                padding: const EdgeInsets.all(15),
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color:
-                                            //  Color.fromRGBO(231, 181, 229, 0.9),
-                                            Color.fromRGBO(15, 5, 158, 0.4),
-                                        blurRadius: 5.0, // soften the shadow
-                                        spreadRadius: 2.0, //extend the shadow
-                                        offset: Offset(
-                                          3.0, // Move to right 5  horizontally
-                                          3.0, // Move to bottom 5 Vertically
-                                        ),
-                                      ),
-                                    ],
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                        color: const Color.fromRGBO(
-                                            13, 154, 189, 0.4),
-                                        width: 4)),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    const Text(
-                                      'Form Submitted Succcessfully!',
-                                      maxLines: 3,
-                                      style: TextStyle(
-                                          color: Colors.black, fontSize: 16),
-                                    ),
-                                    const SizedBox(
-                                      height: 30,
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.all(15),
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Color.fromRGBO(38, 173, 20, 1),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                //  Color.fromRGBO(231, 181, 229, 0.9),
-                                                Color.fromRGBO(15, 5, 158, 0.4),
-                                            blurRadius:
-                                                5.0, // soften the shadow
-                                            spreadRadius:
-                                                2.0, //extend the shadow
-                                            offset: Offset(
-                                              3.0, // Move to right 5  horizontally
-                                              3.0, // Move to bottom 5 Vertically
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 70,
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                      height: 30,
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      const Dashboard())),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : Container(),
               ],
             )),
         isLoading
@@ -482,7 +538,99 @@ class _ProposalDocumentsState extends State<ProposalDocuments> {
                       ])),
                 ),
               )
-            : Container()
+            : Container(),
+        isSubmitted
+            ? Positioned(
+                // left: 20,
+                // right: 20,
+                // top: 40,
+                // bottom: 40,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      height: MediaQuery.of(context).size.height,
+                      decoration: const BoxDecoration(color: Colors.black38),
+                    ),
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(40, 160, 40, 160),
+                        padding: const EdgeInsets.all(15),
+                        decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: const [
+                              BoxShadow(
+                                color:
+                                    //  Color.fromRGBO(231, 181, 229, 0.9),
+                                    Color.fromRGBO(15, 5, 158, 0.4),
+                                blurRadius: 5.0, // soften the shadow
+                                spreadRadius: 2.0, //extend the shadow
+                                offset: Offset(
+                                  3.0, // Move to right 5  horizontally
+                                  3.0, // Move to bottom 5 Vertically
+                                ),
+                              ),
+                            ],
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color.fromRGBO(13, 154, 189, 0.4),
+                                width: 4)),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Form Submitted Succcessfully!',
+                              maxLines: 3,
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 16),
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color.fromRGBO(38, 173, 20, 1),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        //  Color.fromRGBO(231, 181, 229, 0.9),
+                                        Color.fromRGBO(15, 5, 158, 0.4),
+                                    blurRadius: 5.0, // soften the shadow
+                                    spreadRadius: 2.0, //extend the shadow
+                                    offset: Offset(
+                                      3.0, // Move to right 5  horizontally
+                                      3.0, // Move to bottom 5 Vertically
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 70,
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 30,
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const Dashboard())),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : Container(),
       ],
     );
   }

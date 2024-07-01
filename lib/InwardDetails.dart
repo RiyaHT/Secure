@@ -10,18 +10,34 @@ class InwardDetailsScreen extends StatefulWidget {
 }
 
 class _InwardDetailsScreenState extends State<InwardDetailsScreen> {
-  List<InwardDetails> inwardDetail = [
-    InwardDetails('Inward Type:', 'Proposal'),
-    InwardDetails('Proposal Type:', 'Renewal'),
-    InwardDetails('Product Name:',
-        'Loan Insurance try try try try try try try try try try'),
-    InwardDetails('Inward Type:', 'Proposal'),
-    InwardDetails('Proposal Type:', 'Renewal'),
-    InwardDetails('Product Name:', 'Loan Insurance'),
-    InwardDetails('Inward Type:', 'Proposal'),
-    InwardDetails('Proposal Type:', 'Renewal'),
-    InwardDetails('Product Name:', 'Loan Insurance')
-  ];
+  // List<InwardDetails> inwardDetail = [
+  //   InwardDetails('Inward Type:', 'Proposal'),
+  //   InwardDetails('Proposal Type:', 'Renewal'),
+  //   InwardDetails('Product Name:',
+  //       'Loan Insurance try try try try try try try try try try'),
+  //   InwardDetails('Inward Type:', 'Proposal'),
+  //   InwardDetails('Proposal Type:', 'Renewal'),
+  //   InwardDetails('Product Name:', 'Loan Insurance'),
+  //   InwardDetails('Inward Type:', 'Proposal'),
+  //   InwardDetails('Proposal Type:', 'Renewal'),
+  //   InwardDetails('Product Name:', 'Loan Insurance')
+  // ];
+
+  Map inwardDetail = {
+    "submission_mode": "Digital",
+    "inward_proposal_type": "Fresh Proposal",
+    "product": "Advances Loss Of Profit",
+    "agreement_code": "23456"
+  };
+
+  List inwardKeys = [];
+
+  @override
+  void initState() {
+    super.initState();
+    inwardKeys = inwardDetail.keys.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,7 +82,7 @@ class _InwardDetailsScreenState extends State<InwardDetailsScreen> {
               Expanded(
                 child: ListView.builder(
                     padding: const EdgeInsets.all(5),
-                    itemCount: inwardDetail.length,
+                    itemCount: inwardKeys.length,
                     itemBuilder: (BuildContext context, int index) {
                       return Container(
                         padding: const EdgeInsets.fromLTRB(5, 10, 5, 10),
@@ -82,7 +98,7 @@ class _InwardDetailsScreenState extends State<InwardDetailsScreen> {
                             Container(
                               width: MediaQuery.of(context).size.width * 0.42,
                               child: Text(
-                                '${inwardDetail[index].feild} ',
+                                '${inwardKeys[index]} ',
                                 softWrap: false,
                                 maxLines: 5,
                                 overflow: TextOverflow.ellipsis,
@@ -97,7 +113,7 @@ class _InwardDetailsScreenState extends State<InwardDetailsScreen> {
                               child: Wrap(
                                 children: [
                                   Text(
-                                    '${inwardDetail[index].detail} ',
+                                    '${inwardDetail[inwardKeys[index]]} ',
                                     maxLines: 5,
                                     softWrap: false,
                                     style: const TextStyle(

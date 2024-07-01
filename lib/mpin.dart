@@ -87,6 +87,7 @@ class _MpinBoxState extends State<MpinBox> {
       _prefs.then((SharedPreferences pref) => {
             pref.setString('phoneNumber', appState.mobileNumber),
             pref.setString('employeeNo', appState.employeeNo),
+            pref.setString('name', appState.name),
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (context) => const Dashboard()))
           });

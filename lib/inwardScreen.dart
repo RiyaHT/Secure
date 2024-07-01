@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:secure_app/InwardDetails.dart';
 import 'package:secure_app/dashboard.dart';
 import 'package:secure_app/dioSingleton.dart';
 import 'package:secure_app/inwardForm%201.dart';
@@ -28,6 +29,7 @@ class _InwardStatus2State extends State<InwardStatus2> {
     "Completed": 0,
     "totalCount": 6
   };
+  String proposalID = '';
   bool _isSearching = false;
   final _controller = SearchController();
   List<Employee> employees = <Employee>[
@@ -154,6 +156,31 @@ class _InwardStatus2State extends State<InwardStatus2> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  getInwardDetails(proposalID) async {
+    SharedPreferences prefs = await _prefs;
+    var token = prefs.getString('token') ?? '';
+    Map<String, String> postData = {"id": proposalID};
+    print(postData);
+    Map<String, String> headers = {
+      'Content-Type': 'application/json; charset=UTF-8',
+      "Accept": "application/json",
+      "Authorization": token
+    };
+    try {
+      final response = await dio.post(
+          'https://uatcld.sbigeneral.in/SecureApp/allProposalDetails',
+          options: Options(headers: headers),
+          data: postData);
+
+      // if (response.statusCode == 201) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => const InwardDetailsScreen()));
+      // }
+    } on DioException catch (error) {
+      print(error.message);
     }
   }
 
@@ -398,169 +425,181 @@ class _InwardStatus2State extends State<InwardStatus2> {
                           final item = _isSearching
                               ? _searchResult[index]
                               : proposalData[index];
-                          return Container(
-                              margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                              padding:
-                                  const EdgeInsets.fromLTRB(15, 10, 15, 10),
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                      color: const Color.fromRGBO(
-                                          13, 154, 189, 0.4),
-                                      width: 2)),
-                              child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            // 'Inward Number: ${employees[index].inwardNo} ',
-                                            'Inward Number: ${proposalData[index]['id']}',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 13,
-                                                letterSpacing: 0.8,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                          const SizedBox(
-                                            height: 2,
-                                          ),
-                                          Text(
-                                            'Customer Name: ${proposalData[index]['customer_name']}',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 11,
-                                                letterSpacing: 0.8,
-                                                // fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                          const SizedBox(
-                                            height: 2,
-                                          ),
-                                          Text(
-                                            'Agreement Code: ${proposalData[index]['agreement_code']} ',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 11,
-                                                letterSpacing: 0.8,
-                                                // fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                          const SizedBox(
-                                            height: 2,
-                                          ),
-                                          Text(
-                                            'Product: ${proposalData[index]['product']} ',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 11,
-                                                letterSpacing: 0.8,
-                                                // fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                          const SizedBox(
-                                            height: 2,
-                                          ),
-                                          Text(
-                                            'Premium Amount: ${proposalData[index]['premium_amount']}',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                letterSpacing: 0.8,
-                                                fontSize: 11,
-                                                // fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                          const SizedBox(
-                                            height: 2,
-                                          ),
-                                          Text(
-                                            'Form Type: ${proposalData[index]['inward_type']} ',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                letterSpacing: 0.8,
-                                                fontSize: 11,
-                                                // fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                          const SizedBox(
-                                            height: 2,
-                                          ),
-                                          Text(
-                                            'Date: ${proposalData[index]['proposer_signed_date']} ',
-                                            softWrap: false,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 11,
-                                                letterSpacing: 0.8,
-                                                // fontWeight: FontWeight.bold,
-                                                color: Colors.black),
-                                          ),
-                                        ]),
-                                    Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Container(
-                                            padding: EdgeInsets.only(
-                                                left: 5,
-                                                right: 5,
-                                                top: 5,
-                                                bottom: 5),
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.2,
-                                            height: MediaQuery.of(context)
-                                                    .size
-                                                    .height *
-                                                0.06,
-                                            decoration: BoxDecoration(
-                                                color: (proposalData[index]
-                                                            ['status'] ==
-                                                        'Declined')
-                                                    ? Colors.red
-                                                    : proposalData[index]
-                                                                ['status'] ==
-                                                            'Completed'
-                                                        ? Colors.green
-                                                        : proposalData[index][
-                                                                    'status'] ==
-                                                                'Discrepancy'
-                                                            ? Colors
-                                                                .orangeAccent
-                                                            : Colors.grey,
-                                                borderRadius:
-                                                    BorderRadius.circular(5)),
-                                            child: Center(
-                                              child: Text(
-                                                ' ${proposalData[index]['status']} ',
-                                                softWrap: false,
-                                                maxLines: 2,
-                                                textAlign: TextAlign.center,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white),
+                          return TextButton(
+                            onPressed: () {
+                              // setState(() {
+                              //   proposalID =
+                              //       proposalData[index]['id'].toString();
+                              // });
+                              // getInwardDetails(proposalID);
+                            },
+                            child: Container(
+                                margin:
+                                    const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                                padding:
+                                    const EdgeInsets.fromLTRB(15, 10, 15, 10),
+                                decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: const Color.fromRGBO(
+                                            13, 154, 189, 0.4),
+                                        width: 2)),
+                                child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              // 'Inward Number: ${employees[index].inwardNo} ',
+                                              'Inward Number: ${proposalData[index]['id']}',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 13,
+                                                  letterSpacing: 0.8,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                            const SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              'Customer Name: ${proposalData[index]['customer_name']}',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  letterSpacing: 0.8,
+                                                  // fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                            const SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              'Agreement Code: ${proposalData[index]['agreement_code']} ',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  letterSpacing: 0.8,
+                                                  // fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                            const SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              'Product: ${proposalData[index]['product']} ',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  letterSpacing: 0.8,
+                                                  // fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                            const SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              'Premium Amount: ${proposalData[index]['premium_amount']}',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  letterSpacing: 0.8,
+                                                  fontSize: 11,
+                                                  // fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                            const SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              'Form Type: ${proposalData[index]['inward_type']} ',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  letterSpacing: 0.8,
+                                                  fontSize: 11,
+                                                  // fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                            const SizedBox(
+                                              height: 2,
+                                            ),
+                                            Text(
+                                              'Date: ${proposalData[index]['proposer_signed_date']} ',
+                                              softWrap: false,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 11,
+                                                  letterSpacing: 0.8,
+                                                  // fontWeight: FontWeight.bold,
+                                                  color: Colors.black),
+                                            ),
+                                          ]),
+                                      Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              padding: EdgeInsets.only(
+                                                  left: 5,
+                                                  right: 5,
+                                                  top: 5,
+                                                  bottom: 5),
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.2,
+                                              height: MediaQuery.of(context)
+                                                      .size
+                                                      .height *
+                                                  0.06,
+                                              decoration: BoxDecoration(
+                                                  color: (proposalData[index]
+                                                              ['status'] ==
+                                                          'Declined')
+                                                      ? Colors.red
+                                                      : proposalData[index]
+                                                                  ['status'] ==
+                                                              'Completed'
+                                                          ? Colors.green
+                                                          : proposalData[index][
+                                                                      'status'] ==
+                                                                  'Discrepancy'
+                                                              ? Colors
+                                                                  .orangeAccent
+                                                              : Colors.grey,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5)),
+                                              child: Center(
+                                                child: Text(
+                                                  ' ${proposalData[index]['status']} ',
+                                                  softWrap: false,
+                                                  maxLines: 2,
+                                                  textAlign: TextAlign.center,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.white),
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        ]),
-                                  ]));
+                                          ]),
+                                    ])),
+                          );
                         }),
               )
             ],
